@@ -8,6 +8,7 @@ export class TripsController {
 
   @Get(':serviceId')
   async findForService(@Param('serviceId') serviceId: string): Promise<Trips[]> {
-    return this.tripsService.findForService(serviceId);
+    const trips = await this.tripsService.findForService(serviceId);
+    return trips;
   }
 }

@@ -1,4 +1,4 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Controller, Get, NotFoundException, Param } from '@nestjs/common';
 import { RoutesService } from './routes.service';
 import { Routes } from 'src/models/entities/routes.entity';
 
@@ -13,6 +13,10 @@ export class RoutesController {
 
   @Get(':routeId')
   async findOne(@Param('routeId') routeId: string): Promise<Routes> {
-    return this.routesService.findOne(routeId);
+    const routes = await this.routesService.findOne(routeId);
+    if (!routes) {
+      throw new NotFoundException();
+    }
+    return routes;
   }
 }
