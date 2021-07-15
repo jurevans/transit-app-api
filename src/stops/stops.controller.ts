@@ -15,5 +15,4 @@ export class StopsController {
   async findOne(@Param('stopId') stopId: string): Promise<Stops> {
     return this.stopsService.findOne(stopId);
   }
-
 }

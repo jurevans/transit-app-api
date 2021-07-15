@@ -6,7 +6,10 @@ import { StopsService } from './stops/stops.service';
 import { StopsModule } from './stops/stops.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Connection, getConnectionOptions } from 'typeorm';
+import { AgencyController } from './agency/agency.controller';
+import { AgencyService } from './agency/agency.service';
 import * as ormconfig from '../ormconfig';
+import { AgencyModule } from './agency/agency.module';
 
 TypeOrmModule.forRootAsync({
   useFactory: async () =>
@@ -17,9 +20,9 @@ TypeOrmModule.forRootAsync({
 });
 
 @Module({
-  imports: [TypeOrmModule.forRoot(), StopsModule],
-  controllers: [AppController, StopsController],
-  providers: [AppService, StopsService],
+  imports: [TypeOrmModule.forRoot(), AgencyModule, StopsModule ],
+  controllers: [AppController, AgencyController, StopsController],
+  providers: [AppService, AgencyService, StopsService],
 })
 export class AppModule {
   constructor(private connection: Connection) {}
