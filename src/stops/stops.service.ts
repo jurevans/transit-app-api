@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Stops } from 'src/models/entities/stops.entity';
@@ -12,6 +12,14 @@ export class StopsService {
 
   findAll() {
     return this.stopsRepository.find();
+    // Query Builder example - This returns only requested columns
+
+    /*
+    return this.stopsRepository
+      .createQueryBuilder('stops')
+      .select(['stop_id as "stopId"', 'the_geom as "theGeom"'])
+      .getRawMany();
+    */
   }
 
   findOne(stopId: string) {

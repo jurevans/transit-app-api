@@ -5,54 +5,54 @@ import {
   JoinColumn,
   ManyToOne,
   OneToMany,
-} from "typeorm";
-import { FeedInfo } from "./feedInfo.entity";
-import { CalendarDates } from "./calendarDates.entity";
-import { FareRules } from "./fareRules.entity";
-import { Transfers } from "./transfers.entity";
-import { Trips } from "./trips.entity";
+} from 'typeorm';
+import { FeedInfo } from './feedInfo.entity';
+import { CalendarDates } from './calendarDates.entity';
+import { FareRules } from './fareRules.entity';
+import { Transfers } from './transfers.entity';
+import { Trips } from './trips.entity';
 
-@Index("calendar_pkey", ["feedIndex", "serviceId"], { unique: true })
-@Index("calendar_service_id", ["serviceId"], {})
-@Entity("calendar", { schema: "gtfs" })
+@Index('calendar_pkey', ['feedIndex', 'serviceId'], { unique: true })
+@Index('calendar_service_id', ['serviceId'], {})
+@Entity('calendar', { schema: 'gtfs' })
 export class Calendar {
-  @Column("integer", { primary: true, name: "feed_index" })
+  @Column('integer', { primary: true, name: 'feed_index' })
   feedIndex: number;
 
-  @Column("text", { primary: true, name: "service_id" })
+  @Column('text', { primary: true, name: 'service_id' })
   serviceId: string;
 
-  @Column("integer", { name: "monday" })
+  @Column('integer', { name: 'monday' })
   monday: number;
 
-  @Column("integer", { name: "tuesday" })
+  @Column('integer', { name: 'tuesday' })
   tuesday: number;
 
-  @Column("integer", { name: "wednesday" })
+  @Column('integer', { name: 'wednesday' })
   wednesday: number;
 
-  @Column("integer", { name: "thursday" })
+  @Column('integer', { name: 'thursday' })
   thursday: number;
 
-  @Column("integer", { name: "friday" })
+  @Column('integer', { name: 'friday' })
   friday: number;
 
-  @Column("integer", { name: "saturday" })
+  @Column('integer', { name: 'saturday' })
   saturday: number;
 
-  @Column("integer", { name: "sunday" })
+  @Column('integer', { name: 'sunday' })
   sunday: number;
 
-  @Column("date", { name: "start_date" })
+  @Column('date', { name: 'start_date' })
   startDate: string;
 
-  @Column("date", { name: "end_date" })
+  @Column('date', { name: 'end_date' })
   endDate: string;
 
   @ManyToOne(() => FeedInfo, (feedInfo) => feedInfo.calendars, {
-    onDelete: "CASCADE",
+    onDelete: 'CASCADE',
   })
-  @JoinColumn([{ name: "feed_index", referencedColumnName: "feedIndex" }])
+  @JoinColumn([{ name: 'feed_index', referencedColumnName: 'feedIndex' }])
   feedIndex2: FeedInfo;
 
   @OneToMany(() => CalendarDates, (calendarDates) => calendarDates.calendar)

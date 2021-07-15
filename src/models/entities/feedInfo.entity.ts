@@ -4,57 +4,57 @@ import {
   Index,
   OneToMany,
   PrimaryGeneratedColumn,
-} from "typeorm";
-import { Agency } from "./agency.entity";
-import { Calendar } from "./calendar.entity";
-import { FareAttributes } from "./fareAttributes.entity";
-import { FareRules } from "./fareRules.entity";
-import { Frequencies } from "./frequencies.entity";
-import { Routes } from "./routes.entity";
-import { StopTimes } from "./stopTimes.entity";
-import { Transfers } from "./transfers.entity";
-import { Trips } from "./trips.entity";
+} from 'typeorm';
+import { Agency } from './agency.entity';
+import { Calendar } from './calendar.entity';
+import { FareAttributes } from './fareAttributes.entity';
+import { FareRules } from './fareRules.entity';
+import { Frequencies } from './frequencies.entity';
+import { Routes } from './routes.entity';
+import { StopTimes } from './stopTimes.entity';
+import { Transfers } from './transfers.entity';
+import { Trips } from './trips.entity';
 
-@Index("feed_info_pkey", ["feedIndex"], { unique: true })
-@Entity("feed_info", { schema: "gtfs" })
+@Index('feed_info_pkey', ['feedIndex'], { unique: true })
+@Entity('feed_info', { schema: 'gtfs' })
 export class FeedInfo {
-  @PrimaryGeneratedColumn({ type: "integer", name: "feed_index" })
+  @PrimaryGeneratedColumn({ type: 'integer', name: 'feed_index' })
   feedIndex: number;
 
-  @Column("text", { name: "feed_publisher_name", nullable: true })
+  @Column('text', { name: 'feed_publisher_name', nullable: true })
   feedPublisherName: string | null;
 
-  @Column("text", { name: "feed_publisher_url", nullable: true })
+  @Column('text', { name: 'feed_publisher_url', nullable: true })
   feedPublisherUrl: string | null;
 
-  @Column("text", { name: "feed_timezone", nullable: true })
+  @Column('text', { name: 'feed_timezone', nullable: true })
   feedTimezone: string | null;
 
-  @Column("text", { name: "feed_lang", nullable: true })
+  @Column('text', { name: 'feed_lang', nullable: true })
   feedLang: string | null;
 
-  @Column("text", { name: "feed_version", nullable: true })
+  @Column('text', { name: 'feed_version', nullable: true })
   feedVersion: string | null;
 
-  @Column("date", { name: "feed_start_date", nullable: true })
+  @Column('date', { name: 'feed_start_date', nullable: true })
   feedStartDate: string | null;
 
-  @Column("date", { name: "feed_end_date", nullable: true })
+  @Column('date', { name: 'feed_end_date', nullable: true })
   feedEndDate: string | null;
 
-  @Column("text", { name: "feed_id", nullable: true })
+  @Column('text', { name: 'feed_id', nullable: true })
   feedId: string | null;
 
-  @Column("text", { name: "feed_contact_url", nullable: true })
+  @Column('text', { name: 'feed_contact_url', nullable: true })
   feedContactUrl: string | null;
 
-  @Column("text", { name: "feed_contact_email", nullable: true })
+  @Column('text', { name: 'feed_contact_email', nullable: true })
   feedContactEmail: string | null;
 
-  @Column("date", { name: "feed_download_date", nullable: true })
+  @Column('date', { name: 'feed_download_date', nullable: true })
   feedDownloadDate: string | null;
 
-  @Column("text", { name: "feed_file", nullable: true })
+  @Column('text', { name: 'feed_file', nullable: true })
   feedFile: string | null;
 
   @OneToMany(() => Agency, (agency) => agency.feedIndex2)

@@ -5,44 +5,44 @@ import {
   JoinColumn,
   ManyToOne,
   OneToMany,
-} from "typeorm";
-import { Agency } from "./agency.entity";
-import { FeedInfo } from "./feedInfo.entity";
-import { PaymentMethods } from "./paymentMethods.entity";
-import { FareRules } from "./fareRules.entity";
+} from 'typeorm';
+import { Agency } from './agency.entity';
+import { FeedInfo } from './feedInfo.entity';
+import { PaymentMethods } from './paymentMethods.entity';
+import { FareRules } from './fareRules.entity';
 
-@Index("fare_attributes_pkey", ["fareId", "feedIndex"], { unique: true })
-@Entity("fare_attributes", { schema: "gtfs" })
+@Index('fare_attributes_pkey', ['fareId', 'feedIndex'], { unique: true })
+@Entity('fare_attributes', { schema: 'gtfs' })
 export class FareAttributes {
-  @Column("integer", { primary: true, name: "feed_index" })
+  @Column('integer', { primary: true, name: 'feed_index' })
   feedIndex: number;
 
-  @Column("text", { primary: true, name: "fare_id" })
+  @Column('text', { primary: true, name: 'fare_id' })
   fareId: string;
 
-  @Column("double precision", { name: "price", precision: 53 })
+  @Column('double precision', { name: 'price', precision: 53 })
   price: number;
 
-  @Column("text", { name: "currency_type" })
+  @Column('text', { name: 'currency_type' })
   currencyType: string;
 
-  @Column("integer", { name: "transfers", nullable: true })
+  @Column('integer', { name: 'transfers', nullable: true })
   transfers: number | null;
 
-  @Column("integer", { name: "transfer_duration", nullable: true })
+  @Column('integer', { name: 'transfer_duration', nullable: true })
   transferDuration: number | null;
 
   @ManyToOne(() => Agency, (agency) => agency.fareAttributes)
   @JoinColumn([
-    { name: "feed_index", referencedColumnName: "feedIndex" },
-    { name: "agency_id", referencedColumnName: "agencyId" },
+    { name: 'feed_index', referencedColumnName: 'feedIndex' },
+    { name: 'agency_id', referencedColumnName: 'agencyId' },
   ])
   agency: Agency;
 
   @ManyToOne(() => FeedInfo, (feedInfo) => feedInfo.fareAttributes, {
-    onDelete: "CASCADE",
+    onDelete: 'CASCADE',
   })
-  @JoinColumn([{ name: "feed_index", referencedColumnName: "feedIndex" }])
+  @JoinColumn([{ name: 'feed_index', referencedColumnName: 'feedIndex' }])
   feedIndex2: FeedInfo;
 
   @ManyToOne(
@@ -50,7 +50,7 @@ export class FareAttributes {
     (paymentMethods) => paymentMethods.fareAttributes
   )
   @JoinColumn([
-    { name: "payment_method", referencedColumnName: "paymentMethod" },
+    { name: 'payment_method', referencedColumnName: 'paymentMethod' },
   ])
   paymentMethod: PaymentMethods;
 

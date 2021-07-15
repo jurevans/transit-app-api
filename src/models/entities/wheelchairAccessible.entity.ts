@@ -1,14 +1,14 @@
-import { Column, Entity, Index, OneToMany } from "typeorm";
-import { Stops } from "./stops.entity";
-import { Trips } from "./trips.entity";
+import { Column, Entity, Index, OneToMany } from 'typeorm';
+import { Stops } from './stops.entity';
+import { Trips } from './trips.entity';
 
-@Index("wheelchair_accessible_pkey", ["wheelchairAccessible"], { unique: true })
-@Entity("wheelchair_accessible", { schema: "gtfs" })
+@Index('wheelchair_accessible_pkey', ['wheelchairAccessible'], { unique: true })
+@Entity('wheelchair_accessible', { schema: 'gtfs' })
 export class WheelchairAccessible {
-  @Column("integer", { primary: true, name: "wheelchair_accessible" })
+  @Column('integer', { primary: true, name: 'wheelchair_accessible' })
   wheelchairAccessible: number;
 
-  @Column("text", { name: "description", nullable: true })
+  @Column('text', { name: 'description', nullable: true })
   description: string | null;
 
   @OneToMany(() => Stops, (stops) => stops.wheelchairAccessible)

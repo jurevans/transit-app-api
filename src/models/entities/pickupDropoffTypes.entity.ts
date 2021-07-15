@@ -1,13 +1,13 @@
-import { Column, Entity, Index, OneToMany } from "typeorm";
-import { StopTimes } from "./stopTimes.entity";
+import { Column, Entity, Index, OneToMany } from 'typeorm';
+import { StopTimes } from './stopTimes.entity';
 
-@Index("pickup_dropoff_types_pkey", ["typeId"], { unique: true })
-@Entity("pickup_dropoff_types", { schema: "gtfs" })
+@Index('pickup_dropoff_types_pkey', ['typeId'], { unique: true })
+@Entity('pickup_dropoff_types', { schema: 'gtfs' })
 export class PickupDropoffTypes {
-  @Column("integer", { primary: true, name: "type_id" })
+  @Column('integer', { primary: true, name: 'type_id' })
   typeId: number;
 
-  @Column("text", { name: "description", nullable: true })
+  @Column('text', { name: 'description', nullable: true })
   description: string | null;
 
   @OneToMany(() => StopTimes, (stopTimes) => stopTimes.dropOffType)

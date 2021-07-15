@@ -1,13 +1,13 @@
-import { Column, Entity, Index, OneToMany } from "typeorm";
-import { StopTimes } from "./stopTimes.entity";
+import { Column, Entity, Index, OneToMany } from 'typeorm';
+import { StopTimes } from './stopTimes.entity';
 
-@Index("timepoints_pkey", ["timepoint"], { unique: true })
-@Entity("timepoints", { schema: "gtfs" })
+@Index('timepoints_pkey', ['timepoint'], { unique: true })
+@Entity('timepoints', { schema: 'gtfs' })
 export class Timepoints {
-  @Column("integer", { primary: true, name: "timepoint" })
+  @Column('integer', { primary: true, name: 'timepoint' })
   timepoint: number;
 
-  @Column("text", { name: "description", nullable: true })
+  @Column('text', { name: 'description', nullable: true })
   description: string | null;
 
   @OneToMany(() => StopTimes, (stopTimes) => stopTimes.timepoint)

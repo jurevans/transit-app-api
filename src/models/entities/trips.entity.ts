@@ -5,56 +5,59 @@ import {
   JoinColumn,
   ManyToOne,
   OneToMany,
-} from "typeorm";
-import { Frequencies } from "./frequencies.entity";
-import { StopTimes } from "./stopTimes.entity";
-import { Calendar } from "./calendar.entity";
-import { FeedInfo } from "./feedInfo.entity";
-import { Routes } from "./routes.entity";
-import { WheelchairAccessible } from "./wheelchairAccessible.entity";
+} from 'typeorm';
+import { Frequencies } from './frequencies.entity';
+import { StopTimes } from './stopTimes.entity';
+import { Calendar } from './calendar.entity';
+import { FeedInfo } from './feedInfo.entity';
+import { Routes } from './routes.entity';
+import { WheelchairAccessible } from './wheelchairAccessible.entity';
 
-@Index("trips_pkey", ["feedIndex", "tripId"], { unique: true })
-@Index("trips_service_id", ["feedIndex", "serviceId"], {})
-@Index("trips_trip_id", ["tripId"], {})
-@Entity("trips", { schema: "gtfs" })
+@Index('trips_pkey', ['feedIndex', 'tripId'], { unique: true })
+@Index('trips_service_id', ['feedIndex', 'serviceId'], {})
+@Index('trips_trip_id', ['tripId'], {})
+@Entity('trips', { schema: 'gtfs' })
 export class Trips {
-  @Column("integer", { primary: true, name: "feed_index" })
+  @Column('integer', { primary: true, name: 'feed_index' })
   feedIndex: number;
 
-  @Column("text", { name: "service_id" })
+  @Column('text', { name: 'route_id' })
+  routeId: string;
+
+  @Column('text', { name: 'service_id' })
   serviceId: string;
 
-  @Column("text", { primary: true, name: "trip_id" })
+  @Column('text', { primary: true, name: 'trip_id' })
   tripId: string;
 
-  @Column("text", { name: "trip_headsign", nullable: true })
+  @Column('text', { name: 'trip_headsign', nullable: true })
   tripHeadsign: string | null;
 
-  @Column("integer", { name: "direction_id", nullable: true })
+  @Column('integer', { name: 'direction_id', nullable: true })
   directionId: number | null;
 
-  @Column("text", { name: "block_id", nullable: true })
+  @Column('text', { name: 'block_id', nullable: true })
   blockId: string | null;
 
-  @Column("text", { name: "shape_id", nullable: true })
+  @Column('text', { name: 'shape_id', nullable: true })
   shapeId: string | null;
 
-  @Column("text", { name: "trip_short_name", nullable: true })
+  @Column('text', { name: 'trip_short_name', nullable: true })
   tripShortName: string | null;
 
-  @Column("text", { name: "direction", nullable: true })
+  @Column('text', { name: 'direction', nullable: true })
   direction: string | null;
 
-  @Column("text", { name: "schd_trip_id", nullable: true })
+  @Column('text', { name: 'schd_trip_id', nullable: true })
   schdTripId: string | null;
 
-  @Column("text", { name: "trip_type", nullable: true })
+  @Column('text', { name: 'trip_type', nullable: true })
   tripType: string | null;
 
-  @Column("integer", { name: "exceptional", nullable: true })
+  @Column('integer', { name: 'exceptional', nullable: true })
   exceptional: number | null;
 
-  @Column("integer", { name: "bikes_allowed", nullable: true })
+  @Column('integer', { name: 'bikes_allowed', nullable: true })
   bikesAllowed: number | null;
 
   @OneToMany(() => Frequencies, (frequencies) => frequencies.trips)
@@ -65,21 +68,21 @@ export class Trips {
 
   @ManyToOne(() => Calendar, (calendar) => calendar.trips)
   @JoinColumn([
-    { name: "feed_index", referencedColumnName: "feedIndex" },
-    { name: "service_id", referencedColumnName: "serviceId" },
+    { name: 'feed_index', referencedColumnName: 'feedIndex' },
+    { name: 'service_id', referencedColumnName: 'serviceId' },
   ])
   calendar: Calendar;
 
   @ManyToOne(() => FeedInfo, (feedInfo) => feedInfo.trips, {
-    onDelete: "CASCADE",
+    onDelete: 'CASCADE',
   })
-  @JoinColumn([{ name: "feed_index", referencedColumnName: "feedIndex" }])
+  @JoinColumn([{ name: 'feed_index', referencedColumnName: 'feedIndex' }])
   feedIndex2: FeedInfo;
 
   @ManyToOne(() => Routes, (routes) => routes.trips)
   @JoinColumn([
-    { name: "feed_index", referencedColumnName: "feedIndex" },
-    { name: "route_id", referencedColumnName: "routeId" },
+    { name: 'feed_index', referencedColumnName: 'feedIndex' },
+    { name: 'route_id', referencedColumnName: 'routeId' },
   ])
   routes: Routes;
 
@@ -89,8 +92,8 @@ export class Trips {
   )
   @JoinColumn([
     {
-      name: "wheelchair_accessible",
-      referencedColumnName: "wheelchairAccessible",
+      name: 'wheelchair_accessible',
+      referencedColumnName: 'wheelchairAccessible',
     },
   ])
   wheelchairAccessible: WheelchairAccessible;
