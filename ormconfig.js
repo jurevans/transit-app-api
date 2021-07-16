@@ -1,7 +1,11 @@
 const dotenv = require('dotenv');
 const path = require('path');
 
-dotenv.config({ path: path.join(__dirname, '.env.local') });
+const envFile = process.env.NODE_ENV === 'development'
+  ? '.env.local'
+  : '.env';
+
+dotenv.config({ path: path.join(__dirname, envFile) });
 
 const {
   DB_HOST: host,
@@ -19,6 +23,8 @@ module.exports = {
   password,
   database,
   schema: 'gtfs',
-  entities: ["dist/**/*.entity{.ts,.js}"],
-  synchronize: false
+  entities: ['dist/**/*.entity{.ts,.js}'],
+  migrations: ['src/migration/**/*.ts'],
+  synchronize: false,
+  logging: process.env.NODE_ENV === 'development',
 };

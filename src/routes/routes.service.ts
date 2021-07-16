@@ -14,7 +14,28 @@ export class RoutesService {
     return this.routesRepository.find({ relations: ['agency'] })
   }
 
-  findOne(routeId: string) {
-    return this.routesRepository.findOne({ routeId });
+  async findOne(routeId: string) {
+    const daysOfWeek = [
+      'sundary',
+      'monday',
+      'tuesday',
+      'wednesday',
+      'thursday',
+      'friday',
+      'saturday',
+    ];
+    const today = daysOfWeek[ new Date().getDay() ];
+
+    const routes = await this.routesRepository
+      .createQueryBuilder('routes')
+      .innerJoinAndSelect('routes.trips', 'trips')
+      .innerJoinAndSelect('trips.calendar', 'calendar')
+      .innerJoinAndSelect('trips.stopTimes', 'stopTimes')
+      .where(`calendar.${today} = 1`)
+      .andWhere('routes.route_id = :routeId', { routeId })
+      .limit(10)
+      .getOne();
+
+    return routes; //this.routesRepository.findOne({ routeId });
   }
 }
