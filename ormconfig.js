@@ -15,6 +15,11 @@ const {
   DB_DATABASE: database,
 } = process.env;
 
+const getMigrationsDirectory = () => {
+  const dir = process.env.NODE_ENV === 'migration' ? 'src' : `${__dirname}`;
+  return [`${dir}/migrations/**/*{.ts,.js}`];
+};
+
 module.exports = {
   type: 'postgres',
   host,
@@ -24,7 +29,7 @@ module.exports = {
   database,
   schema: 'gtfs',
   entities: ['dist/**/*.entity{.ts,.js}'],
-  migrations: ['src/migration/**/*.ts'],
+  migrations: getMigrationsDirectory(),
   synchronize: false,
   logging: process.env.NODE_ENV === 'development',
 };

@@ -18,7 +18,7 @@ import { TripsService } from './trips/trips.service';
 import { ShapesController } from './shapes/shapes.controller';
 import { ShapesService } from './shapes/shapes.service';
 import { ShapesModule } from './shapes/shapes.module';
-import * as ormconfig from '../../_transit-app-api/ormconfig';
+import * as ormconfig from '../ormconfig';
 
 TypeOrmModule.forRootAsync({
   useFactory: async () =>

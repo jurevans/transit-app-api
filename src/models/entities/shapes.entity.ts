@@ -15,7 +15,7 @@ export class Shapes {
   @PrimaryColumn('double precision', { name: 'shape_pt_lon', precision: 53 })
   shapePtLon: number;
 
-  @PrimaryColumn('integer', { name: 'shape_pt_sequence' })
+  @Column('integer', { name: 'shape_pt_sequence' })
   shapePtSequence: number;
 
   @Column('double precision', {

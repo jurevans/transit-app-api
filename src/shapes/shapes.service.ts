@@ -10,10 +10,19 @@ export class ShapesService {
     private shapesRepository: Repository<Shapes>,
   ) {}
 
-  async find(shapeId: string) {
+  find(shapeId: string) {
     return this.shapesRepository
       .createQueryBuilder('shapes')
       .where('shapes.shape_id = :shapeId', { shapeId })
+      .orderBy('shapes.shape_pt_sequence', 'ASC')
       .getMany();
+  }
+
+  findShapes() {
+    return this.shapesRepository
+      .createQueryBuilder('shapes')
+      .select('shape_id')
+      .distinct(true)
+      .getRawMany();
   }
 }

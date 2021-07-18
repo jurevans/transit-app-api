@@ -3,6 +3,8 @@ import {
   Entity,
   Index,
   JoinColumn,
+  JoinTable,
+  ManyToMany,
   ManyToOne,
   OneToMany,
 } from 'typeorm';
@@ -11,6 +13,7 @@ import { StopTimes } from './stopTimes.entity';
 import { Calendar } from './calendar.entity';
 import { FeedInfo } from './feedInfo.entity';
 import { Routes } from './routes.entity';
+import { Shapes } from './shapes.entity';
 import { WheelchairAccessible } from './wheelchairAccessible.entity';
 
 @Index('trips_pkey', ['feedIndex', 'tripId'], { unique: true })
@@ -85,6 +88,12 @@ export class Trips {
     { name: 'route_id', referencedColumnName: 'routeId' },
   ])
   routes: Routes;
+
+  @ManyToMany(() => Shapes)
+  @JoinTable(
+    { name: 'shapes', joinColumns: [{ name: 'shape_id' }] },
+  )
+  shapes: Shapes[];
 
   @ManyToOne(
     () => WheelchairAccessible,

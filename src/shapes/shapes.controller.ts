@@ -6,6 +6,11 @@ import { Shapes } from 'src/models/entities/shapes.entity';
 export class ShapesController {
   constructor(private shapesService: ShapesService) {}
 
+  @Get()
+  async findShapes(): Promise<Shapes[]> {
+    return this.shapesService.findShapes();
+  }
+
   @Get(':shapeId')
   async find(@Param('shapeId') shapeId: string): Promise<Shapes[]> {
     return this.shapesService.find(shapeId);

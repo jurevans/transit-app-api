@@ -7,7 +7,7 @@ export class RoutesController {
   constructor(private routesService: RoutesService) {}
 
   @Get()
-  async findAll(): Promise<Routes[]> {
+  findAll(): Promise<any[]> {
     return this.routesService.findAll();
   }
 
