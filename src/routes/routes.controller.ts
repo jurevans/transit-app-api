@@ -10,7 +10,7 @@ export class RoutesController {
   findAll(): Promise<any[]> {
     return this.routesService.findAll();
   }
-
+/*
   @Get(':routeId')
   async findOne(@Param('routeId') routeId: string): Promise<Routes> {
     const routes = await this.routesService.findOne(routeId);
@@ -18,5 +18,10 @@ export class RoutesController {
       throw new NotFoundException();
     }
     return routes;
+  }
+*/
+  @Get('stations')
+  async findStations(): Promise<any> {
+    return await this.routesService.findStations();
   }
 }

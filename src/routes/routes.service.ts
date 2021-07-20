@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IsNull, Not, Repository } from 'typeorm';
 import { Routes } from 'src/models/entities/routes.entity';
@@ -55,12 +55,23 @@ export class RoutesService {
           .orderBy('stopTimes.stop_sequence')
           .innerJoinAndSelect('stopTimes.stops', 'stops')
           .select([
+            'stopTimes.arrival_time as "arrivalTime"',
+            'stopTimes.departure_time as "departureTime"',
+            'stopTimes.stop_id as stopTimes_stopId',
             'stops.stop_name as "stopName"',
             'stops.stop_lon as "stopLon"',
             'stops.stop_lat as "stopLat"',
+            // Unnecessary, but interesting, as we're using PostGIS:
+            /*
+            'ST_X(stops.the_geom) as "theGeomX"',
+            'ST_Y(stops.the_geom) as "theGeomY"',
+            'ST_AsText(stops.the_geom) as "theGeomText"',
+            */
           ])
           .getRawMany();
 
+        // Get shape data from here first:
+        // https://data.cityofnewyork.us/api/geospatial/3qz8-muuu?method=export&format=GeoJSON
         const shapes = await this.shapesRepository
           .createQueryBuilder('shapes')
           .where('shapes.shape_id = :shapeId', { shapeId: trip.shapeId })
@@ -69,10 +80,11 @@ export class RoutesService {
 
         tripData = {
           ...trip,
-          path: shapes.map(shape => ([ shape.shapePtLon, shape.shapePtLat ])),
           stops,
+          path: shapes.map(shape => ([shape.shapePtLon, shape.shapePtLat])),
         }
       }
+
       const routeWithStations = {
         ...route,
         trip: tripData,
@@ -93,7 +105,7 @@ export class RoutesService {
       'friday',
       'saturday',
     ];
-    const today = daysOfWeek[ new Date().getDay() ];
+    const today = daysOfWeek[new Date().getDay()];
 
     const routes = await this.routesRepository
       .createQueryBuilder('routes')
@@ -105,5 +117,68 @@ export class RoutesService {
       .getOne();
 
     return routes;
+  }
+
+  async findStations() {
+    const routes = await this.routesRepository.find({
+      select: [
+        'routeId',
+        'routeShortName',
+        'routeLongName',
+        'routeDesc',
+        'routeColor',
+      ],
+    });
+
+    const mapTrips = routes.map(async (route: Routes) => {
+      const trip = await this.tripsRepository.findOne({
+        where: {
+          routeId: route.routeId,
+          directionId: 1,
+        },
+        select: [ 'tripId', 'shapeId', 'tripHeadsign', 'directionId' ],
+      });
+
+      return {
+        ...route,
+        trip,
+      };
+    });
+
+    const tripIds = await Promise.all(mapTrips.map(async (trip: any) => {
+      const thing = await trip;
+      if (thing && thing.trip) {
+        return thing.trip.tripId;
+      }
+    }));
+
+    const inTripIds = tripIds.filter((id: string) => !!id);
+
+    const stations = await this.stopTimesRepository
+      .createQueryBuilder('stop_times')
+      .andWhere('stop_times.trip_id IN (:...tripIds)', { tripIds: inTripIds })
+      .innerJoinAndSelect('stop_times.stops', 'stops')
+      .innerJoinAndSelect('stop_times.trips', 'trips')
+      .innerJoinAndSelect('trips.routes', 'routes')
+      .select([
+        'string_agg(routes.route_id, \'-\') as "routeIds"',
+        'string_agg(routes.route_color, \'-\') as "routeColors"',
+        'stops.stop_lat as "stopLat"',
+        'stops.stop_lon as "stopLon"',
+        'string_agg(stops.stop_name, \'#\') as "name"',
+      ])
+      .groupBy('stops.stop_lat')
+      .addGroupBy('stops.stop_lon')
+      .getRawMany();
+
+    return stations.map((station: any) => ({
+      line: station.routeIds.split('-').sort().join('-'),
+      name: station.name.split('#')[0],
+      colors: station.routeColors,
+      coordinates: [
+        station.stopLon,
+        station.stopLat,
+      ]
+    })).sort((a, b) => (a.line < b.line) ? -1 : 1);
   }
 }

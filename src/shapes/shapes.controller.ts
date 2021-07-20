@@ -12,7 +12,7 @@ export class ShapesController {
   }
 
   @Get(':shapeId')
-  async find(@Param('shapeId') shapeId: string): Promise<Shapes[]> {
+  async find(@Param('shapeId') shapeId: string): Promise<any> {
     return this.shapesService.find(shapeId);
   }
 }
