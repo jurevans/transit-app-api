@@ -164,7 +164,7 @@ export class RoutesService {
         'string_agg(routes.route_short_name, \'-\') as "routeIds"',
         'string_agg(routes.route_color, \'-\') as "routeColors"',
         'string_agg(stops.stop_name, \'#\') as "name"',
-        'string_agg(routes.route_long_name, \'#\') as "longname"',
+        'string_agg(routes.route_long_name, \'#\') as "longName"',
         'stops.stop_lat as "stopLat"',
         'stops.stop_lon as "stopLon"',
       ])
@@ -174,11 +174,11 @@ export class RoutesService {
 
     return stations.map((station: any) => {
       const routeIds = station.routeIds.split('-');
-      const longNames = station.longname.split('#');
+      const longNames = station.longName.split('#');
       return {
         line: routeIds.sort().join('-'),
         name: station.name.split('#')[0],
-        longname: longNames.map((longName: string, i: number) => `${routeIds[i]} - ${longName}`).join(', '),
+        longName: longNames.map((longName: string, i: number) => `${routeIds[i]} - ${longName}`).join(', '),
         colors: station.routeColors,
         coordinates: [
           station.stopLon,

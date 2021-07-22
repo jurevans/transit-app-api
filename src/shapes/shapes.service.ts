@@ -74,7 +74,7 @@ export class ShapesService {
         INNER JOIN shape_geoms
           ON shape_geoms.shape_id = t.shape_id
         WHERE shape_geoms.length = (SELECT MAX(length) from shape_geoms where shape_id = t.shape_id)
-      ) AS t(routeId, name, longName, color, description, url, shape_len, id, geom);
+      ) AS t("routeId", "name", "longName", "color", "description", "url", "shape_len", "id", "geom");
     `);
 
     // For any routes missing Shapes, generate LineString geometry
@@ -127,7 +127,7 @@ export class ShapesService {
                     AND trips.direction_id = 0
                   LIMIT 1)
               ORDER BY st.stop_sequence) as c(stop_sequence, trip_id, lon, lat))) as line) line
-        FROM routes r) AS t(routeId, name, longName, color, description, url, geom);
+        FROM routes r) AS t("routeId", "name", "longName", "color", "description", "url", "geom");
     `);
 
     if (jsonBuilder1.length > 0 && jsonBuilder1[0].hasOwnProperty('json_build_object')) {
