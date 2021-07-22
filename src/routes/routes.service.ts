@@ -161,7 +161,7 @@ export class RoutesService {
       .innerJoinAndSelect('stop_times.trips', 'trips')
       .innerJoinAndSelect('trips.routes', 'routes')
       .select([
-        'string_agg(routes.route_id, \'-\') as "routeIds"',
+        'string_agg(routes.route_short_name, \'-\') as "routeIds"',
         'string_agg(routes.route_color, \'-\') as "routeColors"',
         'stops.stop_lat as "stopLat"',
         'stops.stop_lon as "stopLon"',
