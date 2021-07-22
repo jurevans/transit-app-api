@@ -48,23 +48,8 @@ export class ShapesService {
   }
 
   async findShapes() {
-    // Get array of shapeIds:
-    /*
-    const shapes = await this.shapeGeomsRepository
-      .createQueryBuilder('shapeGeom')
-      .select('shape_id as "shapeId"')
-      .distinct(true)
-      .getRawMany();
-
-    return await shapes.map((shape: any) => shape.shapeId)
-    */
     const manager = getManager();
     // Let's completely bypass the ORM for this one
-
-    // TODO: Select from specific array of tripIds. Currently,
-    // this is returning multiple trips with various shapes, 
-    // and we want the trip with the most complete shape
-    // in order to draw the routes on the map.
     const jsonBuilder1 = await manager.query(`
       SELECT json_build_object(
         'type', 'FeatureCollection',

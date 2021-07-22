@@ -156,29 +156,35 @@ export class RoutesService {
 
     const stations = await this.stopTimesRepository
       .createQueryBuilder('stop_times')
-      .andWhere('stop_times.trip_id IN (:...tripIds)', { tripIds: inTripIds })
       .innerJoinAndSelect('stop_times.stops', 'stops')
       .innerJoinAndSelect('stop_times.trips', 'trips')
       .innerJoinAndSelect('trips.routes', 'routes')
+      .andWhere('stop_times.trip_id IN (:...tripIds)', { tripIds: inTripIds })
       .select([
         'string_agg(routes.route_short_name, \'-\') as "routeIds"',
         'string_agg(routes.route_color, \'-\') as "routeColors"',
+        'string_agg(stops.stop_name, \'#\') as "name"',
+        'string_agg(routes.route_long_name, \'#\') as "longname"',
         'stops.stop_lat as "stopLat"',
         'stops.stop_lon as "stopLon"',
-        'string_agg(stops.stop_name, \'#\') as "name"',
       ])
       .groupBy('stops.stop_lat')
       .addGroupBy('stops.stop_lon')
       .getRawMany();
 
-    return stations.map((station: any) => ({
-      line: station.routeIds.split('-').sort().join('-'),
-      name: station.name.split('#')[0],
-      colors: station.routeColors,
-      coordinates: [
-        station.stopLon,
-        station.stopLat,
-      ]
-    })).sort((a, b) => (a.line < b.line) ? -1 : 1);
+    return stations.map((station: any) => {
+      const routeIds = station.routeIds.split('-');
+      const longNames = station.longname.split('#');
+      return {
+        line: routeIds.sort().join('-'),
+        name: station.name.split('#')[0],
+        longname: longNames.map((longName: string, i: number) => `${routeIds[i]} - ${longName}`).join(', '),
+        colors: station.routeColors,
+        coordinates: [
+          station.stopLon,
+          station.stopLat,
+        ],
+      }
+    }).sort((a, b) => (a.line < b.line) ? -1 : 1);
   }
 }

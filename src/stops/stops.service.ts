@@ -14,16 +14,6 @@ export class StopsService {
   ) {}
 
   findAll() {
-    // return this.stopsRepository.find();
-    // Query Builder example - This returns only requested columns
-
-    /*
-    return this.stopsRepository
-      .createQueryBuilder('stops')
-      .select(['stop_id as "stopId"', 'the_geom as "theGeom"'])
-      .getRawMany();
-    */
-
       return this.stopsRepository
         .createQueryBuilder('stops')
         .innerJoinAndSelect('stops.stopTimes', 'stopTimes')
