@@ -11,8 +11,8 @@ export class AgencyService {
     private agencyRepository: Repository<Agency>,
   ) {}
 
-  findAll() {
-    return this.agencyRepository.find();
+  findOne() {
+    return this.agencyRepository.findOneOrFail();
   }
 
   async findLocation(agencyId: string) {

@@ -7,8 +7,8 @@ export class AgencyController {
   constructor(private agencyService: AgencyService) {}
 
   @Get()
-  async findAll(): Promise<Agency[]> {
-    return this.agencyService.findAll();
+  async findAll(): Promise<Agency> {
+    return this.agencyService.findOne();
   }
 
   @Get(':agencyId')
