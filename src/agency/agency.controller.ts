@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Param } from '@nestjs/common';
 import { AgencyService } from './agency.service';
 import { Agency } from 'src/models/entities/agency.entity';
 
@@ -9,5 +9,10 @@ export class AgencyController {
   @Get()
   async findAll(): Promise<Agency[]> {
     return this.agencyService.findAll();
+  }
+
+  @Get(':agencyId')
+  async findLocation(@Param('agencyId') agencyId: string): Promise<any> {
+    return this.agencyService.findLocation(agencyId);
   }
 }

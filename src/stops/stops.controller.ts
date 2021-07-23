@@ -7,7 +7,7 @@ export class StopsController {
   constructor(private stopsService: StopsService) {}
 
   @Get()
-  async findAll(): Promise<Stops[]> {
+  async findAll(): Promise<any[]> {
     return this.stopsService.findAll();
   }
 
