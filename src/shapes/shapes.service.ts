@@ -47,42 +47,48 @@ export class ShapesService {
     };
   }
 
-  async findShapes() {
+  async findShapes(geojson?: string) {
     const manager = getManager();
     // Let's completely bypass the ORM for this one
-    const jsonBuilder1 = await manager.query(`
+    // NOTE: This is temporary - these queries will be saved as a new
+    // dataset once offsets are calculated in PostGIS.
+    const queryRoutesWithShapes = `
+    SELECT
+        DISTINCT ON (routes.route_id) routes.route_id,
+        routes.route_short_name,
+        routes.route_long_name,
+        routes.route_color,
+        routes.route_desc,
+        routes.route_url,
+        shape_geoms.length,
+        t.shape_id,
+        shape_geoms.the_geom
+      FROM gtfs.routes
+      INNER JOIN trips t
+        ON t.route_id = routes.route_id
+      INNER JOIN calendar
+        ON calendar.service_id = t.service_id
+      INNER JOIN shape_geoms
+        ON shape_geoms.shape_id = t.shape_id
+      WHERE shape_geoms.length = (SELECT MAX(length) from shape_geoms where shape_id = t.shape_id)
+    `;
+
+    const geoJsonShapes = `
       SELECT json_build_object(
         'type', 'FeatureCollection',
         'features', json_agg(ST_AsGeoJSON(t.*)::json)
       )
       FROM (
-        SELECT
-          DISTINCT ON (routes.route_id) routes.route_id,
-          routes.route_short_name,
-          routes.route_long_name,
-          routes.route_color,
-          routes.route_desc,
-          routes.route_url,
-          shape_geoms.length,
-          t.shape_id,
-          shape_geoms.the_geom
-        FROM gtfs.routes
-        INNER JOIN trips t
-          ON t.route_id = routes.route_id
-        INNER JOIN calendar
-          ON calendar.service_id = t.service_id
-        INNER JOIN shape_geoms
-          ON shape_geoms.shape_id = t.shape_id
-        WHERE shape_geoms.length = (SELECT MAX(length) from shape_geoms where shape_id = t.shape_id)
+        ${queryRoutesWithShapes}
       ) AS t("routeId", "name", "longName", "color", "description", "url", "shape_len", "id", "geom");
-    `);
+    `;
 
     // For any routes missing Shapes, generate LineString geometry
     // using station locations:
     // TODO: These queries should be run one time, generating a new 
     // table that we can access via ORM. Perhaps this should be a required,
     // one-time migration?
-    const jsonBuilder2 = await manager.query(`
+    const withNullShapesQuery = `
       WITH routes AS (SELECT
         DISTINCT ON (r.route_id) r.route_id,
         r.route_short_name,
@@ -102,12 +108,10 @@ export class ShapesService {
           INNER JOIN trips
           ON trips.route_id = routes.route_id
           WHERE trips.shape_id IS NOT NULL))
+    `;
 
-      SELECT json_build_object(
-              'type', 'FeatureCollection',
-              'features', json_agg(ST_AsGeoJSON(t.*)::json)
-            )
-            FROM (SELECT r.*,
+    const queryLinesFromStations = `
+      SELECT r.*,
           (SELECT ST_MakeLine(Array(SELECT ST_SetSRID(ST_MakePoint(c.lon, c.lat), 4326)
             FROM (SELECT
               DISTINCT ON (st.stop_sequence) st.stop_sequence,
@@ -117,34 +121,60 @@ export class ShapesService {
               FROM stops
               INNER JOIN stop_times st
               ON st.stop_id = stops.stop_id
-              WHERE st.trip_id IN (SELECT
-                    trips.trip_id
-                  FROM trips
-                  INNER JOIN calendar
-                  ON calendar.service_id = trips.service_id
-                  WHERE calendar.monday = 1
-                    AND trips.route_id = r.route_id
-                    AND trips.direction_id = 0
-                  LIMIT 1)
+              WHERE st.trip_id = (SELECT sc.trip_id
+                FROM (SELECT DISTINCT on (t.trip_id) t.trip_id,
+                  COUNT(st.stop_id) as st_count
+                  FROM stop_times st
+                  INNER JOIN trips t
+                  ON t.trip_id = st.trip_id
+                  INNER JOIN calendar cal
+                  ON cal.service_id = t.service_id
+                  WHERE t.route_id = r.route_id
+                    AND cal.monday = 1
+                  GROUP BY t.trip_id
+                  ORDER BY t.trip_id, st_count ASC) sc
+                ORDER BY sc.st_count DESC
+                LIMIT 1)
               ORDER BY st.stop_sequence) as c(stop_sequence, trip_id, lon, lat))) as line) line
-        FROM routes r) AS t("routeId", "name", "longName", "color", "description", "url", "geom");
-    `);
+        FROM routes r`;
 
-    if (jsonBuilder1.length > 0 && jsonBuilder1[0].hasOwnProperty('json_build_object')) {
-      const data = jsonBuilder1[0].json_build_object;
-      if (jsonBuilder2.length > 0 && jsonBuilder2[0].hasOwnProperty('json_build_object')) {
-        const dataForMissingShapes = jsonBuilder2[0].json_build_object;
+    const geoJsonMissingShapes = `
+      ${withNullShapesQuery}
+      SELECT json_build_object(
+        'type', 'FeatureCollection',
+        'features', json_agg(ST_AsGeoJSON(t.*)::json)
+      )
+      FROM (${queryLinesFromStations}) AS t("routeId", "name", "longName", "color", "description", "url", "geom");
+    `;
 
-        return {
-          ...data,
-          features: [
-            ...data.features,
-            ...dataForMissingShapes.features
-          ]
+    if (geojson === 'true') {
+      const jsonBuilderShapes = await manager.query(geoJsonShapes);
+      const jsonBuilderMissingShapes = await manager.query(geoJsonMissingShapes);
+
+      if (jsonBuilderShapes.length > 0 && jsonBuilderShapes[0].hasOwnProperty('json_build_object')) {
+        const data = jsonBuilderShapes[0].json_build_object;
+        if (jsonBuilderMissingShapes.length > 0 && jsonBuilderMissingShapes[0].hasOwnProperty('json_build_object')) {
+          const dataForMissingShapes = jsonBuilderMissingShapes[0].json_build_object;
+
+          return {
+            ...data,
+            features: [
+              ...data.features,
+              ...dataForMissingShapes.features
+            ]
+          }
         }
+        // Did not receive JSON
+        throw new Error();
       }
     }
-    // Should return an error object here:
-    throw new Error();
+
+    const responseShapes = await manager.query(queryRoutesWithShapes);
+    const responseMissingShapes = await manager.query(queryLinesFromStations);
+
+    return [
+      ...responseShapes,
+      ...responseMissingShapes,
+    ];
   }
 }

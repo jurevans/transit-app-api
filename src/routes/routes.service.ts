@@ -175,16 +175,27 @@ export class RoutesService {
     return stations.map((station: any) => {
       const routeIds = station.routeIds.split('-');
       const longNames = station.longName.split('#');
+      const colors = station.routeColors && station.routeColors.split('-');
+
+      const stations = routeIds.map((routeId: string, i: number) => ({
+        routeId,
+        longName: longNames[i],
+        color: colors ? colors[i] : null,
+      }))
+        .sort((a, b) => (a.routeId > b.routeId) ? -1 : 1)
+        .sort((a, b) => (a.color > b.color) ? 1 : -1);
+
       return {
         line: routeIds.sort().join('-'),
         name: station.name.split('#')[0],
         longName: longNames.map((longName: string, i: number) => `${routeIds[i]} - ${longName}`).join(', '),
         colors: station.routeColors,
+        stations,
         coordinates: [
           station.stopLon,
           station.stopLat,
         ],
       }
-    }).sort((a, b) => (a.line < b.line) ? -1 : 1);
+    });
   }
 }

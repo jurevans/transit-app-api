@@ -1,4 +1,4 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Controller, Get, Param, Query } from '@nestjs/common';
 import { ShapesService } from './shapes.service';
 import { Shapes } from 'src/models/entities/shapes.entity';
 
@@ -7,8 +7,8 @@ export class ShapesController {
   constructor(private shapesService: ShapesService) {}
 
   @Get()
-  async findShapes(): Promise<Shapes[]> {
-    return this.shapesService.findShapes();
+  async findShapes(@Query('geojson') geojson?: string): Promise<Shapes[]> {
+    return this.shapesService.findShapes(geojson);
   }
 
   @Get(':shapeId')
