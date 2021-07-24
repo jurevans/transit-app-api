@@ -88,10 +88,7 @@ export class StopsService {
         .sort((a, b) => (a.color > b.color) ? 1 : -1);
 
       return {
-        line: routeIds.sort().join('-'),
         name: station.name.split('#')[0],
-        longName: longNames.map((longName: string, i: number) => `${routeIds[i]} - ${longName}`).join(', '),
-        colors: station.routeColors,
         routes,
         coordinates: [
           station.stopLon,
