@@ -1,6 +1,6 @@
 import { Controller, Get, NotFoundException, Param } from '@nestjs/common';
-import { RoutesService } from './routes.service';
 import { Routes } from 'src/models/entities/routes.entity';
+import { RoutesService } from './routes.service';
 
 @Controller('routes')
 export class RoutesController {
@@ -19,4 +19,5 @@ export class RoutesController {
     }
     return routes;
   }
+
 }

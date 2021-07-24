@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IsNull, Not, Repository } from 'typeorm';
 import { Routes } from 'src/models/entities/routes.entity';
@@ -55,6 +55,9 @@ export class RoutesService {
           .orderBy('stopTimes.stop_sequence')
           .innerJoinAndSelect('stopTimes.stops', 'stops')
           .select([
+            'stopTimes.arrival_time as "arrivalTime"',
+            'stopTimes.departure_time as "departureTime"',
+            'stopTimes.stop_id as stopTimes_stopId',
             'stops.stop_name as "stopName"',
             'stops.stop_lon as "stopLon"',
             'stops.stop_lat as "stopLat"',
@@ -69,10 +72,11 @@ export class RoutesService {
 
         tripData = {
           ...trip,
-          path: shapes.map(shape => ([ shape.shapePtLon, shape.shapePtLat ])),
           stops,
+          path: shapes.map(shape => ([shape.shapePtLon, shape.shapePtLat])),
         }
       }
+
       const routeWithStations = {
         ...route,
         trip: tripData,
@@ -93,13 +97,12 @@ export class RoutesService {
       'friday',
       'saturday',
     ];
-    const today = daysOfWeek[ new Date().getDay() ];
+    const today = daysOfWeek[new Date().getDay()];
 
     const routes = await this.routesRepository
       .createQueryBuilder('routes')
       .innerJoinAndSelect('routes.trips', 'trips')
       .innerJoinAndSelect('trips.calendar', 'calendar')
-      // .innerJoinAndSelect('trips.stopTimes', 'stopTimes')
       .where(`calendar.${today} = 1`)
       .andWhere('routes.route_id = :routeId', { routeId })
       .getOne();
