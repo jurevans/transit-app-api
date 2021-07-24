@@ -61,17 +61,9 @@ export class RoutesService {
             'stops.stop_name as "stopName"',
             'stops.stop_lon as "stopLon"',
             'stops.stop_lat as "stopLat"',
-            // Unnecessary, but interesting, as we're using PostGIS:
-            /*
-            'ST_X(stops.the_geom) as "theGeomX"',
-            'ST_Y(stops.the_geom) as "theGeomY"',
-            'ST_AsText(stops.the_geom) as "theGeomText"',
-            */
           ])
           .getRawMany();
 
-        // Get shape data from here first:
-        // https://data.cityofnewyork.us/api/geospatial/3qz8-muuu?method=export&format=GeoJSON
         const shapes = await this.shapesRepository
           .createQueryBuilder('shapes')
           .where('shapes.shape_id = :shapeId', { shapeId: trip.shapeId })
@@ -111,7 +103,6 @@ export class RoutesService {
       .createQueryBuilder('routes')
       .innerJoinAndSelect('routes.trips', 'trips')
       .innerJoinAndSelect('trips.calendar', 'calendar')
-      // .innerJoinAndSelect('trips.stopTimes', 'stopTimes')
       .where(`calendar.${today} = 1`)
       .andWhere('routes.route_id = :routeId', { routeId })
       .getOne();
