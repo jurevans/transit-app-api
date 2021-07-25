@@ -30,7 +30,7 @@ export class StopsService {
           ON t.route_id = r.route_id
         INNER JOIN calendar cal
           ON cal.service_id = t.service_id
-        WHERE cal.sunday = 0),
+        WHERE cal.${today} = 1),
       stops AS (SELECT
           s.stop_lon,
           s.stop_lat,
