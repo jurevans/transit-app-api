@@ -1,4 +1,4 @@
-import { Controller, Get, NotFoundException, Param } from '@nestjs/common';
+import { Controller, Get, NotFoundException, Param, Query } from '@nestjs/common';
 import { StopsService } from './stops.service';
 import { Stops } from 'src/models/entities/stops.entity';
 
@@ -7,8 +7,8 @@ export class StopsController {
   constructor(private stopsService: StopsService) {}
 
   @Get()
-  async findAll(): Promise<any[]> {
-    return this.stopsService.findAll();
+  async findAll(@Query('geojson') geojson?: string): Promise<any[]> {
+    return this.stopsService.findAll(geojson);
   }
 
   @Get(':stopId')

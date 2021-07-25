@@ -3,10 +3,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ShapesService } from './shapes.service';
 import { ShapesController } from './shapes.controller';
 import { ShapeGeoms } from 'src/models/entities/shapeGeoms.entity';
-import { Trips } from 'src/models/entities/trips.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([ShapeGeoms, Trips])],
+  imports: [TypeOrmModule.forFeature([ShapeGeoms,])],
   exports: [TypeOrmModule],
   providers: [ShapesService],
   controllers: [ShapesController],

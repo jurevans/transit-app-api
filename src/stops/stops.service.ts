@@ -1,101 +1,90 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { getManager, Repository } from 'typeorm';
 import { Stops } from 'src/models/entities/stops.entity';
-import { StopTimes } from 'src/models/entities/stopTimes.entity';
-import { Routes } from 'src/models/entities/routes.entity';
-import { Trips } from 'src/models/entities/trips.entity';
+import { getCurrentDay } from 'src/util';
 
 @Injectable()
 export class StopsService {
   constructor(
     @InjectRepository(Stops)
     private stopsRepository: Repository<Stops>,
-    @InjectRepository(StopTimes)
-    private stopTimesRepository: Repository<StopTimes>,
-    @InjectRepository(Routes)
-    private routesRepository: Repository<Routes>,
-    @InjectRepository(Trips)
-    private tripsRepository: Repository<Trips>,
   ) {}
 
-  async findAll() {
-    const routes = await this.routesRepository.find({
-      select: [
-        'routeId',
-        'routeShortName',
-        'routeLongName',
-        'routeDesc',
-        'routeColor',
-      ],
-    });
+  async findAll(geojson?: string) {
+    const manager = getManager();
+    const today = getCurrentDay();
 
-    const mapTrips = routes.map(async (route: Routes) => {
-      const trip = await this.tripsRepository.findOne({
-        where: {
-          routeId: route.routeId,
-          directionId: 1,
-        },
-        select: [ 'tripId', 'shapeId', 'tripHeadsign', 'directionId' ],
-      });
+    const withRoutes = `
+      WITH
+      routes AS (SELECT
+          DISTINCT ON (r.route_id) r.route_id,
+          r.route_short_name,
+          r.route_long_name,
+          r.route_color,
+          r.route_desc,
+          r.route_url,
+          t.trip_id AS trip_id
+        FROM gtfs.routes r
+        INNER JOIN trips t
+          ON t.route_id = r.route_id
+        INNER JOIN calendar cal
+          ON cal.service_id = t.service_id
+        WHERE cal.sunday = 0),
+      stops AS (SELECT
+          s.stop_lon,
+          s.stop_lat,
+          s.stop_name,
+          r.route_id
+        FROM routes r
+        INNER JOIN trips t
+        ON t.route_id = r.route_id
+        INNER JOIN stop_times st
+        ON st.trip_id = t.trip_id
+        INNER JOIN stops s
+        ON s.stop_id = st.stop_id
+        INNER JOIN calendar cal
+        ON cal.service_id = t.service_id
+        WHERE cal.${today} = 1
+        GROUP BY s.stop_lon, s.stop_lat, s.stop_name, r.route_id
+        ORDER BY r.route_id ASC)
+    `;
 
-      return {
-        ...route,
-        trip,
-      };
-    });
+    const query = `
+      SELECT
+        string_agg(s.route_id, '-') AS "routeIds",
+        string_agg(r.route_short_name, '-') as "routeNames",
+        string_agg(r.route_long_name, '#') as "routeLongNames",
+        string_agg(r.route_color, '-') as "routeColors",
+        string_agg(r.route_url, '|') as "routeUrls",
+        s.stop_name as "name",
+        ST_SetSRID(ST_MakePoint(s.stop_lon, s.stop_lat), 4326) AS "the_geom"
+      FROM stops s
+      INNER JOIN routes r
+      ON s.route_id = r.route_id
+      GROUP BY s.stop_lon, s.stop_lat, s.stop_name
+    `;
 
-    const tripIds = await Promise.all(mapTrips.map(async (trip: any) => {
-      const thing = await trip;
-      if (thing && thing.trip) {
-        return thing.trip.tripId;
+    const jsonBuilder = `
+      ${withRoutes}
+      SELECT json_build_object(
+        'type', 'FeatureCollection',
+        'features', json_agg(ST_AsGeoJSON(t.*)::json)
+        )
+      FROM (${query})
+      AS t("routeIds", "routeNames", "routeLongNames", "routeColors", "routeUrls", "name", "geom")
+    `;
+
+    if (geojson === 'true') {
+      const jsonBuilderData = await manager.query(jsonBuilder);
+      if (jsonBuilderData.length > 0 && jsonBuilderData[0].hasOwnProperty('json_build_object')) {
+        return jsonBuilderData[0].json_build_object;
       }
-    }));
-
-    const inTripIds = tripIds.filter((id: string) => !!id);
-
-    const stations = await this.stopTimesRepository
-      .createQueryBuilder('stop_times')
-      .innerJoinAndSelect('stop_times.stops', 'stops')
-      .innerJoinAndSelect('stop_times.trips', 'trips')
-      .innerJoinAndSelect('trips.routes', 'routes')
-      .andWhere('stop_times.trip_id IN (:...tripIds)', { tripIds: inTripIds })
-      .select([
-        'string_agg(routes.route_short_name, \'-\') as "routeIds"',
-        'string_agg(routes.route_color, \'-\') as "routeColors"',
-        'string_agg(stops.stop_name, \'#\') as "name"',
-        'string_agg(routes.route_long_name, \'#\') as "longName"',
-        'string_agg(routes.route_url, \'|\') as "routeUrls"',
-        'stops.stop_lat as "stopLat"',
-        'stops.stop_lon as "stopLon"',
-      ])
-      .groupBy('stops.stop_lat')
-      .addGroupBy('stops.stop_lon')
-      .getRawMany();
-
-    return stations.map((station: any) => {
-      const routeIds = station.routeIds.split('-');
-      const longNames = station.longName.split('#');
-      const colors = station.routeColors && station.routeColors.split('-');
-      const routeUrls = station.routeUrls.split('|');
-      const routes = routeIds.map((routeId: string, i: number) => ({
-        routeId,
-        longName: longNames[i],
-        color: colors ? colors[i] : null,
-        url: routeUrls[i],
-      }))
-        .sort((a, b) => (a.routeId > b.routeId) ? -1 : 1)
-        .sort((a, b) => (a.color > b.color) ? 1 : -1);
-
-      return {
-        name: station.name.split('#')[0],
-        routes,
-        coordinates: [
-          station.stopLon,
-          station.stopLat,
-        ],
-      }
-    });
+    }
+    return manager.query(`
+      ${withRoutes}
+      ${query}
+    `);
   }
 
   findOne(stopId: string) {

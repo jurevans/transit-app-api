@@ -2,19 +2,17 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { getManager, Repository } from 'typeorm';
 import { ShapeGeoms } from 'src/models/entities/shapeGeoms.entity';
-import { Trips } from 'src/models/entities/trips.entity';
+import { getCurrentDay } from 'src/util';
 
 @Injectable()
 export class ShapesService {
   constructor(
     @InjectRepository(ShapeGeoms)
     private shapeGeomsRepository: Repository<ShapeGeoms>,
-    @InjectRepository(Trips)
-    private tripsRepository: Repository<Trips>,
   ) {}
 
   async find(shapeId: string) {
-    const shape = await this.shapeGeomsRepository
+    const shapeData = await this.shapeGeomsRepository
       .createQueryBuilder('shapeGeoms')
       .where(`shapeGeoms.shape_id = \'${shapeId}\'`)
       .select([
@@ -23,54 +21,38 @@ export class ShapesService {
       ])
       .getRawOne();
 
-    const routes = await this.tripsRepository
-      .createQueryBuilder('trips')
-      .innerJoin('trips.routes', 'routes')
-      .where('trips.shape_id = :shapeId', { shapeId })
-      .select([
-        'DISTINCT trips.route_id AS "name"',
-        'routes.route_short_name AS "shortName"',
-        'routes.route_long_name AS "longName"',
-        'routes.route_color AS "color"',
-        'routes.route_url AS "url"',
-        'routes.route_desc AS "description"',
-      ])
-      .getRawOne();
-
-    return {
-      type: 'Feature',
-      properties:{
-        ...routes,
-        shape_len: shape.length,
-      },
-      geometry: shape.hasOwnProperty('line') ? JSON.parse(shape.line) : {},
-    };
+    if (shapeData && shapeData.hasOwnProperty('line')) {
+      // Returns "LineString" object
+      return JSON.parse(shapeData.line);
+    }
+    throw new Error();
   }
 
   async findShapes(geojson?: string) {
     const manager = getManager();
+    const today = getCurrentDay();
     // Let's completely bypass the ORM for this one
     // NOTE: This is temporary - these queries will be saved as a new
     // dataset once offsets are calculated in PostGIS.
     const queryRoutesWithShapes = `
-    SELECT
-        DISTINCT ON (routes.route_id) routes.route_id,
+      SELECT
+        DISTINCT ON (shape_geoms.length) shape_geoms.length,
+        routes.route_id,
         routes.route_short_name,
         routes.route_long_name,
         routes.route_color,
         routes.route_desc,
         routes.route_url,
-        shape_geoms.length,
-        t.shape_id,
+        shape_geoms.shape_id,
         shape_geoms.the_geom
       FROM gtfs.routes
       INNER JOIN trips t
         ON t.route_id = routes.route_id
-      INNER JOIN calendar
-        ON calendar.service_id = t.service_id
+      INNER JOIN calendar cal
+        ON cal.service_id = t.service_id
       INNER JOIN shape_geoms
         ON shape_geoms.shape_id = t.shape_id
-      WHERE shape_geoms.length = (SELECT MAX(length) from shape_geoms where shape_id = t.shape_id)
+      WHERE cal.${today} = 1
     `;
 
     const geoJsonShapes = `
@@ -80,7 +62,7 @@ export class ShapesService {
       )
       FROM (
         ${queryRoutesWithShapes}
-      ) AS t("routeId", "name", "longName", "color", "description", "url", "shape_len", "id", "geom");
+      ) AS t("shape_len", "routeId", "name", "longName", "color", "description", "url", "id", "geom");
     `;
 
     // For any routes missing Shapes, generate LineString geometry
@@ -99,9 +81,10 @@ export class ShapesService {
       FROM gtfs.routes r
       INNER JOIN trips t
         ON t.route_id = r.route_id
-      INNER JOIN calendar c
-        ON c.service_id = t.service_id
-      WHERE t.shape_id IS NULL
+      INNER JOIN calendar cal
+        ON cal.service_id = t.service_id
+      WHERE cal.${today} = 1
+        AND t.shape_id IS NULL
         AND t.route_id NOT IN
           (SELECT routes.route_id
           FROM routes
@@ -130,7 +113,7 @@ export class ShapesService {
                   INNER JOIN calendar cal
                   ON cal.service_id = t.service_id
                   WHERE t.route_id = r.route_id
-                    AND cal.monday = 1
+                    AND cal.${today} = 1
                   GROUP BY t.trip_id
                   ORDER BY t.trip_id, st_count ASC) sc
                 ORDER BY sc.st_count DESC
