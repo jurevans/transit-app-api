@@ -1,6 +1,8 @@
 import { Controller, Get, NotFoundException, Param, Query } from '@nestjs/common';
 import { StopsService } from './stops.service';
 import { Stops } from 'src/models/entities/stops.entity';
+import { FeatureCollection } from 'src/interfaces/geojson';
+import { StopRawData } from 'src/interfaces/data';
 
 @Controller('stops')
 export class StopsController {
@@ -10,7 +12,7 @@ export class StopsController {
   async findAll(
     @Query('day') day?: string,
     @Query('geojson') geojson?: string,
-    ): Promise<any[]> {
+    ): Promise<FeatureCollection | StopRawData> {
     return this.stopsService.findAll({ day, geojson });
   }
 

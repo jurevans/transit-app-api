@@ -1,6 +1,7 @@
 import { Controller, Get, Param, Query, NotFoundException } from '@nestjs/common';
 import { ShapesService } from './shapes.service';
-import { Shapes } from 'src/models/entities/shapes.entity';
+import { FeatureCollection, LineString } from 'src/interfaces/geojson';
+import { ShapeRawData } from 'src/interfaces/data';
 
 @Controller('shapes')
 export class ShapesController {
@@ -10,12 +11,12 @@ export class ShapesController {
   findShapes(
     @Query('day') day?: string,
     @Query('geojson') geojson?: string,
-    ): Promise<Shapes[]> {
-    return this.shapesService.findShapes(day, geojson);
+    ): Promise<FeatureCollection | ShapeRawData> {
+    return this.shapesService.findShapes({ day, geojson });
   }
 
   @Get(':shapeId')
-  async find(@Param('shapeId') shapeId: string): Promise<any> {
+  async find(@Param('shapeId') shapeId: string): Promise<LineString> {
     const shapes = this.shapesService.find(shapeId);
     if (!shapes) {
       throw new NotFoundException();

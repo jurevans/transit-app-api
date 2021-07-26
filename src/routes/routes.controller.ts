@@ -1,4 +1,5 @@
 import { Controller, Get, NotFoundException, Param, Query } from '@nestjs/common';
+import { RouteRawData } from 'src/interfaces/data';
 import { Routes } from 'src/models/entities/routes.entity';
 import { RoutesService } from './routes.service';
 
@@ -7,7 +8,7 @@ export class RoutesController {
   constructor(private routesService: RoutesService) {}
 
   @Get()
-  findAll(@Query('day') day?: string,): Promise<any[]> {
+  findAll(@Query('day') day?: string,): Promise<RouteRawData> {
     return this.routesService.findAll({ day });
   }
 

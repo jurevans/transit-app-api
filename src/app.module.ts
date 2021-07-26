@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { StopsController } from './stops/stops.controller';
@@ -18,7 +19,11 @@ import { TripsService } from './trips/trips.service';
 import { ShapesController } from './shapes/shapes.controller';
 import { ShapesService } from './shapes/shapes.service';
 import { ShapesModule } from './shapes/shapes.module';
-import * as ormconfig from '../ormconfig';
+import { GtfsController } from './gtfs/gtfs.controller';
+import { GtfsService } from './gtfs/gtfs.service';
+import { GtfsModule } from './gtfs/gtfs.module';
+
+import ormconfig from '../ormconfig';
 
 TypeOrmModule.forRootAsync({
   useFactory: async () =>
@@ -29,9 +34,9 @@ TypeOrmModule.forRootAsync({
 });
 
 @Module({
-  imports: [TypeOrmModule.forRoot(), AgencyModule, StopsModule, RoutesModule, TripsModule, ShapesModule],
-  controllers: [AppController, AgencyController, StopsController, RoutesController, TripsController, ShapesController],
-  providers: [AppService, AgencyService, StopsService, RoutesService, TripsService, ShapesService],
+  imports: [ConfigModule.forRoot(), TypeOrmModule.forRoot(), AgencyModule, StopsModule, RoutesModule, TripsModule, ShapesModule, GtfsModule],
+  controllers: [AppController, AgencyController, StopsController, RoutesController, TripsController, ShapesController, GtfsController],
+  providers: [AppService, AgencyService, StopsService, RoutesService, TripsService, ShapesService, GtfsService],
 })
 export class AppModule {
   constructor(private connection: Connection) {}

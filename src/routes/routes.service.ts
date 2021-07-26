@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Routes } from 'src/models/entities/routes.entity';
 import { getCurrentDay } from 'src/util';
+import { RouteRawData } from 'src/interfaces/data';
 
 @Injectable()
 export class RoutesService {
@@ -11,7 +12,7 @@ export class RoutesService {
     private routesRepository: Repository<Routes>,
   ) {}
 
-  async findAll(params: { day?: string }) {
+  async findAll(params: { day?: string }): Promise<RouteRawData> {
     const { day } = params;
     const today = day || getCurrentDay();
     const routes = await this.routesRepository
@@ -33,7 +34,7 @@ export class RoutesService {
     return routes;
   }
 
-  async findOne(params: { routeId: string, day?: string }) {
+  async findOne(params: { routeId: string, day?: string }): Promise<Routes> {
     const { routeId, day } = params;
     const today = day || getCurrentDay();
 

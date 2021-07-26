@@ -59,7 +59,7 @@ export class StopsService {
         string_agg(r.route_color, '-') as "routeColors",
         string_agg(r.route_url, '|') as "routeUrls",
         s.stop_name as "name",
-        ST_SetSRID(ST_MakePoint(s.stop_lon, s.stop_lat), 4326) AS "the_geom"
+        ST_SetSRID(ST_MakePoint(s.stop_lon, s.stop_lat), 4326) AS "theGeom"
       FROM stops s
       INNER JOIN routes r
       ON s.route_id = r.route_id
@@ -91,7 +91,7 @@ export class StopsService {
     `);
   }
 
-  findOne(stopId: string) {
+  findOne(stopId: string): Promise<Stops> {
     return this.stopsRepository.findOne({ stopId });
   }
 }

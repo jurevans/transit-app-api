@@ -46,7 +46,7 @@ Where `gtfs.zip` is the name of the downloaded `.zip` file containing the GTFS d
 ## Additional environment configuration:
 You will eventually need the following variable defined in a `.env.local` file:
 ```
-REALTIME_ACCESS_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+GTFS_REALTIME_ACCESS_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 The `REALTIME_ACCESS_KEY` is not currently used, but will be required in order to make any requests to a GTFS-realtime endpoint. A different configuration model may be needed in the event that the user wants to serve more than one feed from the database, such that different transit authorities are available with different endpoints for realtime data. The goal of this project is to be as agnostic as is possible.
 

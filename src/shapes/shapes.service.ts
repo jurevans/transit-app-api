@@ -3,6 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { getManager, Repository } from 'typeorm';
 import { ShapeGeoms } from 'src/models/entities/shapeGeoms.entity';
 import { getCurrentDay } from 'src/util';
+import { FeatureCollection, LineString } from 'src/interfaces/geojson';
+import { ShapeRawData } from 'src/interfaces/data';
 
 @Injectable()
 export class ShapesService {
@@ -11,7 +13,7 @@ export class ShapesService {
     private shapeGeomsRepository: Repository<ShapeGeoms>,
   ) {}
 
-  async find(shapeId: string) {
+  async find(shapeId: string): Promise<LineString> {
     const shapeData = await this.shapeGeomsRepository
       .createQueryBuilder('shapeGeoms')
       .where(`shapeGeoms.shape_id = \'${shapeId}\'`)
@@ -22,33 +24,34 @@ export class ShapesService {
       .getRawOne();
 
     if (shapeData && shapeData.hasOwnProperty('line')) {
-      // Returns "LineString" object
       return JSON.parse(shapeData.line);
     }
   }
 
-  async findShapes(day?: string, geojson?: string) {
+  async findShapes(params: {
+    day?: string,
+    geojson?: string,
+  }): Promise<FeatureCollection | ShapeRawData> {
+    const { day, geojson } = params;
     const manager = getManager();
     const today = day || getCurrentDay();
-    // Let's completely bypass the ORM for this one
-    // NOTE: This is temporary - these queries will be saved as a new
-    // dataset once offsets are calculated in PostGIS.
+
     const queryRoutesWithShapes = `
       SELECT
-        DISTINCT ON (shape_geoms.length) shape_geoms.length,
-        routes.route_id,
-        routes.route_short_name,
-        routes.route_long_name,
-        routes.route_color,
-        routes.route_desc,
-        routes.route_url,
-        shape_geoms.shape_id,
-        shape_geoms.the_geom
-      FROM gtfs.routes
+        DISTINCT ON (sg.length) sg.length,
+        r.route_id AS "routeId",
+        r.route_short_name AS "name",
+        r.route_long_name AS "longName",
+        r.route_color AS "color",
+        r.route_desc AS "description",
+        r.route_url AS "url",
+        sg.shape_id AS "id",
+        sg.the_geom AS "theGeom"
+      FROM gtfs.routes r
       INNER JOIN trips t
-        ON t.route_id = routes.route_id
-      INNER JOIN shape_geoms
-        ON shape_geoms.shape_id = t.shape_id
+        ON t.route_id = r.route_id
+      INNER JOIN shape_geoms sg
+        ON sg.shape_id = t.shape_id
       WHERE t.shape_id IS NOT NULL
     `;
 
@@ -133,19 +136,16 @@ export class ShapesService {
 
       if (jsonBuilderShapes.length > 0 && jsonBuilderShapes[0].hasOwnProperty('json_build_object')) {
         const data = jsonBuilderShapes[0].json_build_object;
-        if (jsonBuilderMissingShapes.length > 0 && jsonBuilderMissingShapes[0].hasOwnProperty('json_build_object')) {
-          const dataForMissingShapes = jsonBuilderMissingShapes[0].json_build_object;
+        let dataForMissingShapes: FeatureCollection;
 
-          return {
-            ...data,
-            features: [
-              ...data.features,
-              ...dataForMissingShapes.features
-            ]
-          }
+        if (jsonBuilderMissingShapes.length > 0 && jsonBuilderMissingShapes[0].hasOwnProperty('json_build_object')) {
+          dataForMissingShapes = jsonBuilderMissingShapes[0].json_build_object;
         }
-        // Did not receive JSON
-        throw new Error();
+
+        if (dataForMissingShapes.hasOwnProperty('features')) {
+          data.features.push(...dataForMissingShapes.features);
+        }
+        return data;
       }
     }
 
