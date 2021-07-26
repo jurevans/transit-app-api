@@ -8,7 +8,7 @@ export class RoutesController {
 
   @Get()
   findAll(@Query('day') day?: string,): Promise<any[]> {
-    return this.routesService.findAll(day);
+    return this.routesService.findAll({ day });
   }
 
   @Get(':routeId')
@@ -22,5 +22,4 @@ export class RoutesController {
     }
     return routes;
   }
-
 }

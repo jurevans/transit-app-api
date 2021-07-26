@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, getManager } from 'typeorm';
 import { Agency } from 'src/models/entities/agency.entity';
-import fetch from 'node-fetch';
 
 @Injectable()
 export class AgencyService {
@@ -15,7 +14,8 @@ export class AgencyService {
     return this.agencyRepository.findOneOrFail();
   }
 
-  async findLocation(agencyId: string) {
+  async findLocation(params: { agencyId: string }) {
+    const { agencyId } = params;
     const manager = getManager();
     const locationResults = await manager.query(`
       WITH centroid AS (

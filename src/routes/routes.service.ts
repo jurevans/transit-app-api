@@ -11,9 +11,9 @@ export class RoutesService {
     private routesRepository: Repository<Routes>,
   ) {}
 
-  async findAll(day) {
+  async findAll(params: { day?: string }) {
+    const { day } = params;
     const today = day || getCurrentDay();
-    console.log('DAY', day);
     const routes = await this.routesRepository
       .createQueryBuilder('r')
       .select([

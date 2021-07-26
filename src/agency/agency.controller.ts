@@ -13,6 +13,6 @@ export class AgencyController {
 
   @Get(':agencyId')
   async findLocation(@Param('agencyId') agencyId: string): Promise<any> {
-    return this.agencyService.findLocation(agencyId);
+    return this.agencyService.findLocation({ agencyId });
   }
 }

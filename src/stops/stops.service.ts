@@ -84,6 +84,7 @@ export class StopsService {
         return {};
       }
     }
+
     return manager.query(`
       ${withRoutes}
       ${query}

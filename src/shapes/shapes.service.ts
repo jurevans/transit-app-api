@@ -47,11 +47,9 @@ export class ShapesService {
       FROM gtfs.routes
       INNER JOIN trips t
         ON t.route_id = routes.route_id
-      INNER JOIN calendar cal
-        ON cal.service_id = t.service_id
       INNER JOIN shape_geoms
         ON shape_geoms.shape_id = t.shape_id
-      WHERE cal.${today} = 1
+      WHERE t.shape_id IS NOT NULL
     `;
 
     const geoJsonShapes = `
