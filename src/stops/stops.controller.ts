@@ -7,16 +7,19 @@ export class StopsController {
   constructor(private stopsService: StopsService) {}
 
   @Get()
-  async findAll(@Query('geojson') geojson?: string): Promise<any[]> {
-    return this.stopsService.findAll(geojson);
+  async findAll(
+    @Query('day') day?: string,
+    @Query('geojson') geojson?: string,
+    ): Promise<any[]> {
+    return this.stopsService.findAll({ day, geojson });
   }
 
   @Get(':stopId')
   async findOne(@Param('stopId') stopId: string): Promise<Stops> {
-    const stops = await this.stopsService.findOne(stopId);
-    if (!stops) {
+    const stop = await this.stopsService.findOne(stopId);
+    if (!stop) {
       throw new NotFoundException();
     }
-    return stops;
+    return stop;
   }
 }

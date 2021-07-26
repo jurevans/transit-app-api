@@ -11,15 +11,9 @@ export class RoutesService {
     private routesRepository: Repository<Routes>,
   ) {}
 
-  /**
-   * Currently, this gets all routes, all stops for route, and the path.
-   * This is broken up into multiple queries, and mapped back together in
-   * a usable format.
-   * @returns 
-   */
-  async findAll() {
-    const today = getCurrentDay();
-
+  async findAll(day) {
+    const today = day || getCurrentDay();
+    console.log('DAY', day);
     const routes = await this.routesRepository
       .createQueryBuilder('r')
       .select([
@@ -31,16 +25,17 @@ export class RoutesService {
       ])
       .distinct(true)
       .innerJoin('r.trips', 'trips')
-      .innerJoin('trips.calendar', 'calendar')
-      .where(`calendar.${today} = 1`)
+      .innerJoin('trips.calendar', 'cal')
+      .where(`cal.${today} = 1`)
       .orderBy('r.route_id', 'ASC')
       .getRawMany();
 
     return routes;
   }
 
-  async findOne(routeId: string) {
-    const today = getCurrentDay();
+  async findOne(params: { routeId: string, day?: string }) {
+    const { routeId, day } = params;
+    const today = day || getCurrentDay();
 
     const routes = await this.routesRepository
       .createQueryBuilder('r')

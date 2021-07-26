@@ -5,7 +5,7 @@ import { ShapesController } from './shapes.controller';
 import { ShapeGeoms } from 'src/models/entities/shapeGeoms.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([ShapeGeoms,])],
+  imports: [TypeOrmModule.forFeature([ShapeGeoms])],
   exports: [TypeOrmModule],
   providers: [ShapesService],
   controllers: [ShapesController],

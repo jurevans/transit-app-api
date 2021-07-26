@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, getManager } from 'typeorm';
 import { Agency } from 'src/models/entities/agency.entity';
 import fetch from 'node-fetch';
 
@@ -16,17 +16,30 @@ export class AgencyService {
   }
 
   async findLocation(agencyId: string) {
-    const agency = await this.agencyRepository.findOne({
-      select: [ 'agencyName'],
-      where: { agencyId }
-    });
+    const manager = getManager();
+    const locationResults = await manager.query(`
+      WITH centroid AS (
+        SELECT ST_Centroid(geom) center
+        FROM (SELECT ST_Multi(ST_Union(the_geom))::geometry(MultiPoint, 4326) AS geom
+            FROM stops s
+            INNER JOIN stop_times st
+            ON st.stop_id = s.stop_id
+            INNER JOIN trips t
+            ON t.trip_id = st.trip_id
+            INNER JOIN routes r
+            ON r.route_id = t.route_id
+            WHERE r.agency_id = '${agencyId}'
+          ) AS geom
+      )
+      SELECT ST_X(center) longitude, ST_Y(center) latitude from centroid;
+    `);
 
-    const { agencyName } = agency;
-    const apiUrl = 'http://api.positionstack.com/v1/forward';
-    const accessKey = process.env.POSITION_STACK_ACCESS_KEY;
-    const query = `${apiUrl}?access_key=${accessKey}&limit=1&output=json&query=${agencyName}`;
-    const response = await fetch(query);
-    const { data } = await response.json();
-    return data;
+    if (locationResults.length > 0) {
+      const { longitude, latitude } = locationResults[0];
+      return {
+        longitude,
+        latitude,
+      };
+    }
   }
 }

@@ -25,12 +25,11 @@ export class ShapesService {
       // Returns "LineString" object
       return JSON.parse(shapeData.line);
     }
-    throw new Error();
   }
 
-  async findShapes(geojson?: string) {
+  async findShapes(day?: string, geojson?: string) {
     const manager = getManager();
-    const today = getCurrentDay();
+    const today = day || getCurrentDay();
     // Let's completely bypass the ORM for this one
     // NOTE: This is temporary - these queries will be saved as a new
     // dataset once offsets are calculated in PostGIS.

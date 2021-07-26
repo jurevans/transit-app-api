@@ -11,9 +11,10 @@ export class StopsService {
     private stopsRepository: Repository<Stops>,
   ) {}
 
-  async findAll(geojson?: string) {
+  async findAll(params: { day?: string, geojson?: string }) {
+    const { day, geojson } = params;
     const manager = getManager();
-    const today = getCurrentDay();
+    const today = day || getCurrentDay();
 
     const withRoutes = `
       WITH
@@ -79,6 +80,8 @@ export class StopsService {
       const jsonBuilderData = await manager.query(jsonBuilder);
       if (jsonBuilderData.length > 0 && jsonBuilderData[0].hasOwnProperty('json_build_object')) {
         return jsonBuilderData[0].json_build_object;
+      } else {
+        return {};
       }
     }
     return manager.query(`
@@ -88,7 +91,6 @@ export class StopsService {
   }
 
   findOne(stopId: string) {
-    // Do stuff with tripId:
     return this.stopsRepository.findOne({ stopId });
   }
 }
