@@ -10,8 +10,8 @@ export class AgencyService {
     private agencyRepository: Repository<Agency>,
   ) {}
 
-  findOne(props: { feedIndex: number }) {
-    const { feedIndex } = props;
-    return this.agencyRepository.findOneOrFail({ feedIndex });
+  findOne(props: { feedIndex: number, agencyId: string }) {
+    const { feedIndex, agencyId } = props;
+    return this.agencyRepository.findOneOrFail({ feedIndex, agencyId });
   }
 }

@@ -1,13 +1,13 @@
 # transit-app-api
 
-This is the backend companion to [transit-app-next](https://github.com/jurevans/transit-app-next/), and provides GTFS data via PostgreSQL/PostGIS, and will soon serve JSON endpoints to access GTFS-Realtime data.
+This is the backend companion to [transit-app-next](https://github.com/jurevans/transit-app-next/), and provides static GTFS data via PostgreSQL/PostGIS, as well as serves JSON endpoints to access GTFS-Realtime data.
 
 This project built with [NestJS](https://nestjs.com/), [TypeORM](https://typeorm.io/) and [TypeScript](https://www.typescriptlang.org/). This project is in its infancy, and should be considered a work-in-progress! There is so much more to do.
 
 ## Usage:
 
 Run:
-```
+```bash
 npm run start:dev
 ```
 
@@ -16,7 +16,7 @@ Api is available at `http://localhost:5000/api/v1/`. Swagger documentation is en
 ## Connect to a database
 Example `.env` configuration:
 
-```
+```bash
 DB_HOST=<hostname>
 DB_PORT=5432
 DB_USERNAME=<username>
@@ -29,7 +29,7 @@ This project depends on a PostgrSQL database populated using the gtfs-sql-import
 Basic usage is as follows (executed from within the repo):
 
 Export the following environment variables:
-```
+```bash
 PGDATABASE=mydbname
 PGHOST=example.com
 PGUSER=username
@@ -37,7 +37,7 @@ PGUSER=username
 (__NOTE__: You may need to export `PGPASSWORD=password` if not otherwise authenticated to use `psql`).
 
 Then:
-```
+```bash
 make init
 make load GTFS=gtfs.zip
 ```
@@ -45,7 +45,7 @@ Where `gtfs.zip` is the name of the downloaded `.zip` file containing the GTFS d
 
 ## Additional environment configuration:
 You will need the following variable defined in a `.env` file:
-```
+```bash
 GTFS_REALTIME_ACCESS_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 
@@ -71,7 +71,7 @@ The `proto` string refers to a complied `.proto` file that is an extension of th
 If you have the protobuf-compiler installed (`protoc`), and have a specific `.proto` file you wish to use in addition to `gtfs-realtime.proto`, this can be generated as follows:
 
 From the 'proto/' directory:
-```
+```bash
 npx protoc --plugin=../node_modules/.bin/protoc-gen-ts_proto --ts_proto_out=./ ./path-to-your.proto
 ```
 `protobufjs` is required to make use of compiled protobufs, and is included in this project.
@@ -84,9 +84,10 @@ http://localhost:5000/api/v1/docs
 
 ## Endpoints (Work-in-Progress)
 
-#####Transit system data:
-- `/api/v1/agency/1`
-  - Get agency by `feedIndex` = `1`
+##### Transit system data:
+- `/api/v1/agency/1/id/MTA NYCT`
+  - Get agency by `feedIndex` = `1` and `agencyId` = `MTA NYCT`
+  - Both of these parameters are required to uniquely identify the correct agency
 - `/api/v1/location/1`
   - Get center coordinates by `feedIndex` = `1`
 - `/api/v1/routes/1`
@@ -96,7 +97,7 @@ http://localhost:5000/api/v1/docs
 - `/api/v1/routes/1/trips/7X`
   - Get trips for route identified by `feedIndex` = `1` and `routeId` = `7X`
 
-#####Geographic data:
+##### Geographic data:
 - `/api/v1/geo/1/shapes`
   - Get all route line shapes by `feedIndex` = `1`
 - `/api/v1/geo/1/shapes?geojson=true`
@@ -110,7 +111,7 @@ http://localhost:5000/api/v1/docs
 - `/api/v1/geo/1/stops/S09N`
   - Get raw station data identified by `feedIndex` = `1` and `stationId` = `S09N`
 
-#####GTFS Realtime data:
+##### GTFS Realtime data:
 - `/api/v1/gtfs/1`
   - Get entire GTFS-realtime FeedMessage identified by `feedIndex` `1`
   - __NOTE__: This is an impractical endpoint, and is only here for testing

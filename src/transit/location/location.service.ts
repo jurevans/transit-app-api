@@ -1,7 +1,5 @@
-import { Injectable } from '@nestjs/common';
 import { getManager } from 'typeorm';
 
-@Injectable()
 export class LocationService {
   constructor() {}
 

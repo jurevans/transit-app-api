@@ -6,9 +6,12 @@ import { Agency } from 'src/entities/agency.entity';
 export class AgencyController {
   constructor(private agencyService: AgencyService) {}
 
-  @Get(':feedIndex')
+  @Get(':feedIndex/id/:agencyId')
   @CacheTTL(86400)
-  async findAll(@Param('feedIndex') feedIndex: number): Promise<Agency> {
-    return this.agencyService.findOne({ feedIndex });
+  async findAll(
+    @Param('feedIndex') feedIndex: number,
+    @Param('agencyId') agencyId: string,
+  ): Promise<Agency> {
+    return this.agencyService.findOne({ feedIndex, agencyId });
   }
 }
