@@ -7,10 +7,10 @@ export class GtfsController {
 
   /**
    * Test endpoint
-   * @param agencyId
+   * @param feedIndex
    * @returns
    */
-  @Get(':feedIndex/all')
+  @Get(':feedIndex')
   @CacheTTL(60)
   async find(@Param('feedIndex') feedIndex: number) {
     return await this.gtfsService.find({ feedIndex });
@@ -19,6 +19,7 @@ export class GtfsController {
   /**
    * Find nearest stations by lon/lat
    * /:feedIndex/location?lat=xxx&lon=xxx
+   * @param feedIndex
    * @param lon
    * @param lat
    */
@@ -33,6 +34,7 @@ export class GtfsController {
 
   /**
    * Find all stations on by routeId (/:feedIndex/stations/:routeId)
+   * @param feedIndex
    * @param routeId
    */
   @Get(':feedIndex/stationsByRoute/:routeId')
@@ -45,6 +47,7 @@ export class GtfsController {
 
   /**
    * Find all stations provided by comma-delimted list of IDs
+   * @param feedIndex
    * @param stationIds
    */
   @Get(':feedIndex/stations/:stationIds')
@@ -57,6 +60,7 @@ export class GtfsController {
 
   /**
    * Find all available routeIds
+   * @param feedIndex
    */
   @Get(':feedIndex/routes')
   @CacheTTL(3600)
