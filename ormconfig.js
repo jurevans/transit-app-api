@@ -1,11 +1,6 @@
 const dotenv = require('dotenv');
-const path = require('path');
 
-const envFile = process.env.NODE_ENV === 'development'
-  ? '.env.local'
-  : '.env';
-
-dotenv.config({ path: path.join(__dirname, envFile) });
+dotenv.config();
 
 const {
   DB_HOST: host,

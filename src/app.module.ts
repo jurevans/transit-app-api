@@ -1,24 +1,15 @@
-import { Module } from '@nestjs/common';
+import { CacheInterceptor, CacheModule, Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { StopsController } from './stops/stops.controller';
-import { StopsService } from './stops/stops.service';
-import { StopsModule } from './stops/stops.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Connection, getConnectionOptions } from 'typeorm';
-import { AgencyController } from './agency/agency.controller';
-import { AgencyService } from './agency/agency.service';
-import { AgencyModule } from './agency/agency.module';
-import { RoutesController } from './routes/routes.controller';
-import { RoutesService } from './routes/routes.service';
-import { RoutesModule } from './routes/routes.module';
-import { TripsController } from './trips/trips.controller';
-import { TripsModule } from './trips/trips.module';
-import { TripsService } from './trips/trips.service';
-import { ShapesController } from './shapes/shapes.controller';
-import { ShapesService } from './shapes/shapes.service';
-import { ShapesModule } from './shapes/shapes.module';
-import * as ormconfig from '../ormconfig';
+import { GtfsModule } from './gtfs/gtfs.module';
+import { GeoModule } from './geo/geo.module';
+import { TransitModule } from './transit/transit.module';
+
+import ormconfig from '../ormconfig';
+import { APP_INTERCEPTOR } from '@nestjs/core';
 
 TypeOrmModule.forRootAsync({
   useFactory: async () =>
@@ -29,9 +20,24 @@ TypeOrmModule.forRootAsync({
 });
 
 @Module({
-  imports: [TypeOrmModule.forRoot(), AgencyModule, StopsModule, RoutesModule, TripsModule, ShapesModule],
-  controllers: [AppController, AgencyController, StopsController, RoutesController, TripsController, ShapesController],
-  providers: [AppService, AgencyService, StopsService, RoutesService, TripsService, ShapesService],
+  imports: [
+    ConfigModule.forRoot(),
+    CacheModule.register({ ttl: 30 }),
+    TypeOrmModule.forRoot(),
+    GtfsModule,
+    GeoModule,
+    TransitModule,
+  ],
+  controllers: [
+    AppController,
+  ],
+  providers: [
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: CacheInterceptor,
+    },
+    AppService,
+  ],
 })
 export class AppModule {
   constructor(private connection: Connection) {}
