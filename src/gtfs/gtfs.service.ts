@@ -5,7 +5,6 @@ import { DateTime } from 'luxon';
 import fetch from 'node-fetch';
 import GTFSConfig from '../../config/gtfsRealtime';
 import { Agency } from 'src/models/entities/agency.entity';
-import { Routes } from 'src/models/entities/routes.entity';
 import * as GTFS from 'proto/gtfs-realtime';
 
 @Injectable()
@@ -19,8 +18,6 @@ export class GtfsService {
   constructor(
     @InjectRepository(Agency)
     private agencyRepository: Repository<Agency>,
-    @InjectRepository(Routes)
-    private routesRepository: Repository<Routes>,
   ) {
     this._data = [];
     this._EXPIRES = 60;
@@ -99,17 +96,5 @@ export class GtfsService {
     const stationIds = stationIdString.split(',');
     await this._update(feedIndex);
     return [];
-  }
-
-  async findRouteIds(props: { feedIndex: number}): Promise<any> {
-    const { feedIndex } = props;
-    const routeIdsResults = await this.routesRepository.find({
-      select: [ 'routeId'],
-      where: { feedIndex },
-    });
-    return {
-      data: routeIdsResults.map((routeIdResult: any) => routeIdResult.routeId),
-      updated: DateTime.now().toISO(),
-    };
   }
 }

@@ -2,19 +2,12 @@ import { CacheInterceptor, CacheModule, Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { StopsService } from './geo/stops.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Connection, getConnectionOptions } from 'typeorm';
-import { AgencyController } from './agency/agency.controller';
-import { AgencyService } from './agency/agency.service';
-import { RoutesController } from './routes/routes.controller';
-import { RoutesService } from './routes/routes.service';
 import { RoutesModule } from './routes/routes.module';
-import { ShapesService } from './geo/shapes.service';
-import { GtfsController } from './gtfs/gtfs.controller';
-import { GtfsService } from './gtfs/gtfs.service';
 import { GtfsModule } from './gtfs/gtfs.module';
 import { GeoModule } from './geo/geo.module';
+import { TransitModule } from './transit/transit.module';
 
 import ormconfig from '../ormconfig';
 import { APP_INTERCEPTOR } from '@nestjs/core';
@@ -35,23 +28,17 @@ TypeOrmModule.forRootAsync({
     RoutesModule,
     GtfsModule,
     GeoModule,
+    TransitModule,
   ],
   controllers: [
-    AppController, 
-    AgencyController, 
-    RoutesController, 
-    GtfsController],
+    AppController,
+  ],
   providers: [
     {
       provide: APP_INTERCEPTOR,
       useClass: CacheInterceptor,
     },
     AppService,
-    AgencyService,
-    StopsService,
-    RoutesService,
-    ShapesService,
-    GtfsService,
   ],
 })
 export class AppModule {

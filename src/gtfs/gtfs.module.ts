@@ -3,10 +3,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { GtfsService } from './gtfs.service';
 import { GtfsController } from './gtfs.controller';
 import { Agency } from 'src/models/entities/agency.entity';
-import { Routes } from 'src/models/entities/routes.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Agency, Routes])],
+  imports: [TypeOrmModule.forFeature([Agency])],
   exports: [TypeOrmModule],
   providers: [GtfsService],
   controllers: [GtfsController],

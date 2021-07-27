@@ -57,14 +57,4 @@ export class GtfsController {
   ) {
     return await this.gtfsService.findByIds({ feedIndex, stationIdString });
   }
-
-  /**
-   * Find all available routeIds
-   * @param feedIndex
-   */
-  @Get(':feedIndex/routes')
-  @CacheTTL(3600)
-  findRouteIds(@Param('feedIndex') feedIndex: number) {
-    return this.gtfsService.findRouteIds({ feedIndex });
-  }
 }

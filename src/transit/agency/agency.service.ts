@@ -12,7 +12,6 @@ export class AgencyService {
 
   findOne(props: { feedIndex: number }) {
     const { feedIndex } = props;
-    console.log('FEED INDEX', feedIndex);
     return this.agencyRepository.findOneOrFail({ feedIndex });
   }
 

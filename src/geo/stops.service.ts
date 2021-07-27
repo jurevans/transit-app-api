@@ -87,6 +87,7 @@ export class StopsService {
       if (jsonBuilderData.length > 0 && jsonBuilderData[0].hasOwnProperty('json_build_object')) {
         return jsonBuilderData[0].json_build_object;
       } else {
+        // Throw an error instead?
         return {};
       }
     }

@@ -1,20 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, getManager } from 'typeorm';
-import { Agency } from 'src/models/entities/agency.entity';
+import { getManager } from 'typeorm';
 
 @Injectable()
-export class AgencyService {
-  constructor(
-    @InjectRepository(Agency)
-    private agencyRepository: Repository<Agency>,
-  ) {}
-
-  findOne(props: { feedIndex: number }) {
-    const { feedIndex } = props;
-    console.log('FEED INDEX', feedIndex);
-    return this.agencyRepository.findOneOrFail({ feedIndex });
-  }
+export class LocationService {
+  constructor() {}
 
   async findLocation(params: { feedIndex: number }) {
     const { feedIndex } = params;

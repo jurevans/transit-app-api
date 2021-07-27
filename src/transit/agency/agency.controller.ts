@@ -11,10 +11,4 @@ export class AgencyController {
   async findAll(@Param('feedIndex') feedIndex: number): Promise<Agency> {
     return this.agencyService.findOne({ feedIndex });
   }
-
-  @Get('location/:feedIndex')
-  @CacheTTL(86400)
-  async findLocation(@Param('feedIndex') feedIndex: number): Promise<any> {
-    return this.agencyService.findLocation({ feedIndex });
-  }
 }
