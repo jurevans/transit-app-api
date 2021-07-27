@@ -13,10 +13,15 @@ export class ShapesService {
     private shapeGeomsRepository: Repository<ShapeGeoms>,
   ) {}
 
-  async find(shapeId: string): Promise<LineString> {
+  async find(props: {
+    feedIndex: number,
+    shapeId: string,
+   }): Promise<LineString> {
+    const { feedIndex, shapeId } = props;
     const shapeData = await this.shapeGeomsRepository
       .createQueryBuilder('shapeGeoms')
       .where(`shapeGeoms.shape_id = \'${shapeId}\'`)
+      .andWhere(`shapeGeoms.feed_index = ${feedIndex}`)
       .select([
         'ST_AsGeoJSON(shapeGeoms.the_geom) as "line"',
         'shapeGeoms.length AS "length"',
@@ -28,11 +33,12 @@ export class ShapesService {
     }
   }
 
-  async findShapes(params: {
+  async findShapes(props: {
+    feedIndex: number,
     day?: string,
     geojson?: string,
   }): Promise<FeatureCollection | ShapeRawData> {
-    const { day, geojson } = params;
+    const { feedIndex, day, geojson } = props;
     const manager = getManager();
     const today = day || getCurrentDay();
 
@@ -53,6 +59,7 @@ export class ShapesService {
       INNER JOIN shape_geoms sg
         ON sg.shape_id = t.shape_id
       WHERE t.shape_id IS NOT NULL
+        AND t.feed_index = ${feedIndex}
     `;
 
     const geoJsonShapes = `
@@ -88,9 +95,10 @@ export class ShapesService {
         AND t.route_id NOT IN
           (SELECT routes.route_id
           FROM routes
-          INNER JOIN trips
-          ON trips.route_id = routes.route_id
-          WHERE trips.shape_id IS NOT NULL))
+          INNER JOIN trips t
+          ON t.route_id = routes.route_id
+          WHERE t.shape_id IS NOT NULL
+            AND t.feed_index = ${feedIndex}))
     `;
 
     const queryLinesFromStations = `
@@ -114,6 +122,7 @@ export class ShapesService {
                   ON cal.service_id = t.service_id
                   WHERE t.route_id = r.route_id
                     AND cal.${today} = 1
+                    AND t.feed_index = ${feedIndex}
                   GROUP BY t.trip_id
                   ORDER BY t.trip_id, st_count ASC) sc
                 ORDER BY sc.st_count DESC

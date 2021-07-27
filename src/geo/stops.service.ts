@@ -11,8 +11,12 @@ export class StopsService {
     private stopsRepository: Repository<Stops>,
   ) {}
 
-  async findAll(params: { day?: string, geojson?: string }) {
-    const { day, geojson } = params;
+  async findAll(props: {
+    feedIndex: number,
+    day?: string,
+    geojson?: string,
+   }) {
+    const { day, geojson } = props;
     const manager = getManager();
     const today = day || getCurrentDay();
 
@@ -36,6 +40,7 @@ export class StopsService {
           s.stop_lon,
           s.stop_lat,
           s.stop_name,
+          s.stop_id,
           r.route_id
         FROM routes r
         INNER JOIN trips t
@@ -47,7 +52,7 @@ export class StopsService {
         INNER JOIN calendar cal
         ON cal.service_id = t.service_id
         WHERE cal.${today} = 1
-        GROUP BY s.stop_lon, s.stop_lat, s.stop_name, r.route_id
+        GROUP BY s.stop_lon, s.stop_lat, s.stop_name, r.route_id, s.stop_id
         ORDER BY r.route_id ASC)
     `;
 
@@ -59,11 +64,12 @@ export class StopsService {
         string_agg(r.route_color, '-') as "routeColors",
         string_agg(r.route_url, '|') as "routeUrls",
         s.stop_name as "name",
+        s.stop_id as "id",
         ST_SetSRID(ST_MakePoint(s.stop_lon, s.stop_lat), 4326) AS "theGeom"
       FROM stops s
       INNER JOIN routes r
       ON s.route_id = r.route_id
-      GROUP BY s.stop_lon, s.stop_lat, s.stop_name
+      GROUP BY s.stop_lon, s.stop_lat, s.stop_name, s.stop_id
     `;
 
     const jsonBuilder = `
@@ -73,7 +79,7 @@ export class StopsService {
         'features', json_agg(ST_AsGeoJSON(t.*)::json)
         )
       FROM (${query})
-      AS t("routeIds", "routeNames", "routeLongNames", "routeColors", "routeUrls", "name", "geom")
+      AS t("routeIds", "routeNames", "routeLongNames", "routeColors", "routeUrls", "name", "id", "geom")
     `;
 
     if (geojson === 'true') {
@@ -91,7 +97,8 @@ export class StopsService {
     `);
   }
 
-  findOne(stopId: string): Promise<Stops> {
-    return this.stopsRepository.findOne({ stopId });
+  findOne(props: { feedIndex: number, stopId: string }): Promise<Stops> {
+    const { feedIndex, stopId } = props;
+    return this.stopsRepository.findOne({ where: { feedIndex, stopId } });
   }
 }
