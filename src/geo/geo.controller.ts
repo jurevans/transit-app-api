@@ -1,7 +1,7 @@
 import { Controller, Get, Param, Query, NotFoundException, CacheTTL } from '@nestjs/common';
 import { ShapesService } from './shapes.service';
 import { StopsService } from './stops.service';
-import { Stops } from 'src/models/entities/stops.entity';
+import { Stops } from 'src/entities/stops.entity';
 import { FeatureCollection, LineString } from 'src/interfaces/geojson';
 import { ShapeRawData, StopRawData  } from 'src/interfaces/data';
 

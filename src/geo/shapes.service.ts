@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { getManager, Repository } from 'typeorm';
-import { ShapeGeoms } from 'src/models/entities/shapeGeoms.entity';
+import { ShapeGeoms } from 'src/entities/shapeGeoms.entity';
 import { getCurrentDay } from 'src/util';
 import { FeatureCollection, LineString } from 'src/interfaces/geojson';
 import { ShapeRawData } from 'src/interfaces/data';

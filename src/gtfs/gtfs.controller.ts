@@ -33,7 +33,7 @@ export class GtfsController {
   }
 
   /**
-   * Find all stations on by routeId (/:feedIndex/stations/:routeId)
+   * Find all stations by routeId (/:feedIndex/stations/:routeId)
    * @param feedIndex
    * @param routeId
    */

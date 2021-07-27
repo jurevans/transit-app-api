@@ -14,7 +14,7 @@ npm run start:dev
 Api is available at `http://localhost:5000/api/v1/`. Swagger documentation is enabled at `http://localhost:5000/api/v1/docs/`, though this is presently minimal while the api is being hashed out. The appropriate decorators from `@nestjs/swagger` will be implemented once this becomes stable.
 
 ## Connect to a database
-Example `.env.local` configuration:
+Example `.env` configuration:
 
 ```
 DB_HOST=<hostname>
@@ -44,11 +44,28 @@ make load GTFS=gtfs.zip
 Where `gtfs.zip` is the name of the downloaded `.zip` file containing the GTFS data.
 
 ## Additional environment configuration:
-You will eventually need the following variable defined in a `.env.local` file:
+You will need the following variable defined in a `.env` file:
 ```
 GTFS_REALTIME_ACCESS_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
-The `REALTIME_ACCESS_KEY` is not currently used, but will be required in order to make any requests to a GTFS-realtime endpoint. A different configuration model may be needed in the event that the user wants to serve more than one feed from the database, such that different transit authorities are available with different endpoints for realtime data. The goal of this project is to be as agnostic as is possible.
+
+The key is used to authenticate requests to the API urls defined in `/config/gtfsRealtime.ts`:
+```javascript
+const gtfsRealtime = {
+  'MTA NYCT': {
+    feedUrls: [
+      'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs',
+      'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-ace',
+      'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-bdfm',
+    ],
+    proto: 'nyct-subway',
+  }
+};
+```
+
+These are keyed by the agency ID found in the agency table (in this example, `MTA NYCT`).
+
+The `proto` string refers to a complied `.proto` file that is an extension of the base `gtfs-realtime.proto`, in this case, `nyct-subway.proto`. This gets dynamically loaded should it appear in the config, however, making use of the additional bindings it provides is still in the works.
 
 ## .proto compiling
 If you have the protobuf-compiler installed (`protoc`), and have a specific `.proto` file you wish to use in addition to `gtfs-realtime.proto`, this can be generated as follows:
@@ -65,11 +82,42 @@ Swagger is currently available at:
 http://localhost:5000/api/v1/docs
 ```
 
-## TODO
-There is too much to list here, but a few items include:
-- When real-time updates are implemented, the user should be able to specify a `.proto` file that inherits `gtfs-realtime.proto`, as does the included `proto/nyct-subway.proto` file.
-- This API should easily serve multiple feeds meaning requests should probably require a feed index to delineate the feeds. This feed "index" is automatically generated when the `gtfs-sql-importer` is run, but currently is not being used.
-- An initial migration should be run to generate the optimized route-shape data used by the map application. Presently, `src/shapes/shapes.service.ts` is running a rather large query that attempts to retrieve the most "complete" versions of the routes geometries based on the number of stations served by a trip. These geometries should be stored in their own dataset, once, then queried and cached by the client. Alternatively, a one-time SQL script may be created that serves this purpose, perhaps.
-- Currently, the `/api/v1/shapes` endpoint accepts an optional `?geojson=true` parameter, serving the data in GeoJSON format, using `Feature` and `FeatureCollection` generated in PostGIS. This will be implemented for the `/api/v1/stops` endpoint as well, and the client will be updated to expect GeoJSON data for stop location geometries and properties.
-- Define proper `type`/`interface` fro GeoJSON data.
-- Clean up `routes.service.ts` - this currently isn't serving anything to the client, and was used more for experimentation. The client, in it's current state, is only concerned with stop locations (and associated route data), and route shape data. This may change as requirements are solidifed.
+## Endpoints (Work-in-Progress)
+
+#####Transit system data:
+- `/api/v1/agency/1`
+  - Get agency by `feedIndex` = `1`
+- `/api/v1/location/1`
+  - Get center coordinates by `feedIndex` = `1`
+- `/api/v1/routes/1`
+  - Get all route data by `feedIndex` = `1`
+- `/api/v1/routes/1/id/7X`
+  - Get route by ID where `feedIndex` = `1` and `routeId` = `7X`
+- `/api/v1/routes/1/trips/7X`
+  - Get trips for route identified by `feedIndex` = `1` and `routeId` = `7X`
+
+#####Geographic data:
+- `/api/v1/geo/1/shapes`
+  - Get all route line shapes by `feedIndex` = `1`
+- `/api/v1/geo/1/shapes?geojson=true`
+  - Same as above, in GeoJSON format (FeatureCollection)
+- `/api/v1/geo/1/shapes/GS.N04R`
+  - Get GeoJSON LineString geometry identified by `feedIndex` = `1` and `shapeId` = `GS.N04R`
+- `/api/v1/geo/1/stops`
+  - Get all stops identified by `feedIndex` = `1`
+- `/api/v1/geo/1/stops?geojson=true`
+  - Same as above, in GeoJSON format (FeatureCollection)
+- `/api/v1/geo/1/stops/S09N`
+  - Get raw station data identified by `feedIndex` = `1` and `stationId` = `S09N`
+
+#####GTFS Realtime data:
+- `/api/v1/gtfs/1`
+  - Get entire GTFS-realtime FeedMessage identified by `feedIndex` `1`
+  - __NOTE__: This is an impractical endpoint, and is only here for testing
+- `/api/v1/gtfs/1/location?lat=xxx&lon=xxx`
+  - __TODO__: Find nearest stations to lat/lon
+- `/api/v1/gtfs/1/stationsByRoute/7X`
+  - __TODO__: Find all stations by route id `7X`
+- `/api/v1/gtfs/1/stations/101N,103N,101S,203N`
+  - __TODO__: Find stations by comma-delimited list of station IDs
+

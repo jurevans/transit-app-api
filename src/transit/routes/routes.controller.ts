@@ -1,7 +1,7 @@
 import { CacheTTL, Controller, Get, NotFoundException, Param, Query } from '@nestjs/common';
 import { RouteRawData } from 'src/interfaces/data';
-import { Routes } from 'src/models/entities/routes.entity';
-import { Trips } from 'src/models/entities/trips.entity';
+import { Routes } from 'src/entities/routes.entity';
+import { Trips } from 'src/entities/trips.entity';
 import { RoutesService } from './routes.service';
 
 @Controller('routes')

@@ -4,7 +4,6 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Connection, getConnectionOptions } from 'typeorm';
-import { RoutesModule } from './routes/routes.module';
 import { GtfsModule } from './gtfs/gtfs.module';
 import { GeoModule } from './geo/geo.module';
 import { TransitModule } from './transit/transit.module';
@@ -25,7 +24,6 @@ TypeOrmModule.forRootAsync({
     ConfigModule.forRoot(),
     CacheModule.register({ ttl: 30 }),
     TypeOrmModule.forRoot(),
-    RoutesModule,
     GtfsModule,
     GeoModule,
     TransitModule,

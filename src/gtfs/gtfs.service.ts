@@ -4,7 +4,7 @@ import { Repository } from 'typeorm';
 import { DateTime } from 'luxon';
 import fetch from 'node-fetch';
 import GTFSConfig from '../../config/gtfsRealtime';
-import { Agency } from 'src/models/entities/agency.entity';
+import { Agency } from 'src/entities/agency.entity';
 import * as GTFS from 'proto/gtfs-realtime';
 
 @Injectable()

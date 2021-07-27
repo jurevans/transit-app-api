@@ -1,6 +1,6 @@
 import { CacheTTL, Controller, Get, Param } from '@nestjs/common';
 import { AgencyService } from './agency.service';
-import { Agency } from 'src/models/entities/agency.entity';
+import { Agency } from 'src/entities/agency.entity';
 
 @Controller('agency')
 export class AgencyController {
