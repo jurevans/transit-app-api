@@ -13,6 +13,7 @@ const gtfsRealtime = {
       'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-l',     // L
       'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-si',    // SIR
     ],
+    proto: 'nyct-subway',
   }
 };
 

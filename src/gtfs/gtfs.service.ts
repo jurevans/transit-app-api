@@ -4,9 +4,9 @@ import { Repository } from 'typeorm';
 import { DateTime } from 'luxon';
 import GTFSConfig from '../../config/gtfsRealtime';
 import fetch from 'node-fetch';
-import * as GTFSRealtimeBindings from '../../proto/gtfs-realtime';
 import { Agency } from 'src/models/entities/agency.entity';
 import { Routes } from 'src/models/entities/routes.entity';
+import * as GTFS from 'proto/gtfs-realtime';
 
 @Injectable()
 export class GtfsService {
@@ -14,6 +14,7 @@ export class GtfsService {
   private _data: any[];
   private _lastUpdated: number;
   private _EXPIRES: number;
+  private _extendsProto: any;
 
   constructor(
     @InjectRepository(Agency)
@@ -38,7 +39,15 @@ export class GtfsService {
     if (this._checkExpires()) {
       const { agencyTimezone: TZ, agencyId } = this._agency;
       const config = GTFSConfig[agencyId];
-      const { feedUrls } = config;
+      const { feedUrls, proto } = config;
+
+      if (!this._extendsProto && proto) {
+        // Store and attempt to use extension of gtfs-realtime.proto
+        // NOTE: This may be removed if deemed not-useful-enough.
+        this._extendsProto = proto && await import(`../../proto/${proto}`);
+        console.log(`Imported module ${proto}`)
+      }
+
       const { GTFS_REALTIME_ACCESS_KEY } = process.env;
       const options = {
         method: 'GET',
@@ -50,11 +59,11 @@ export class GtfsService {
       const results = feedUrls.map(async (endpoint: string) => {
         const response = await fetch(endpoint, options);
         const body = await response.buffer();
-        const feed = GTFSRealtimeBindings.FeedMessage.decode(body);
+        const feed = GTFS.FeedMessage.decode(body);
         const updated = DateTime.now().setZone(TZ).toISO();
 
         return {
-          data: GTFSRealtimeBindings.FeedMessage.toJSON(feed),
+          data: GTFS.FeedMessage.toJSON(feed),
           updated,
         }
       });
@@ -66,13 +75,28 @@ export class GtfsService {
 
   // Return everything. This is a placeholder for testing, and is not
   // a practical endpoint:
-  async find(props: { feedIndex: number}) {
+  async find(props: { feedIndex: number }) {
     const { feedIndex } = props;
 
     await this._update(feedIndex);
     return this._data;
   }
 
+  findByLocation(props: { feedIndex: number, lon: number, lat: number }) {
+    const { feedIndex, lon, lat } = props;
+    return [];
+  }
+
+  findByRouteId(props: { feedIndex: number, routeId: string }) {
+    const { feedIndex, routeId } = props;
+    return [];
+  }
+
+  findByIds(props: { feedIndex: number, stationIdString: string }) {
+    const { feedIndex, stationIdString } = props;
+    const stationIds = stationIdString.split(',');
+    return [];
+  }
   async findRouteIds(props: { feedIndex: number}): Promise<any> {
     const { feedIndex } = props;
     const routeIdsResults = await this.routesRepository.find({

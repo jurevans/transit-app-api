@@ -34,7 +34,7 @@ PGDATABASE=mydbname
 PGHOST=example.com
 PGUSER=username
 ```
-(_NOTE_: You may need to export `PGPASSWORD=password` if not otherwise authenticated to use `psql`).
+(__NOTE__: You may need to export `PGPASSWORD=password` if not otherwise authenticated to use `psql`).
 
 Then:
 ```
@@ -49,6 +49,15 @@ You will eventually need the following variable defined in a `.env.local` file:
 GTFS_REALTIME_ACCESS_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
 The `REALTIME_ACCESS_KEY` is not currently used, but will be required in order to make any requests to a GTFS-realtime endpoint. A different configuration model may be needed in the event that the user wants to serve more than one feed from the database, such that different transit authorities are available with different endpoints for realtime data. The goal of this project is to be as agnostic as is possible.
+
+## .proto compiling
+If you have the protobuf-compiler installed (`protoc`), and have a specific `.proto` file you wish to use in addition to `gtfs-realtime.proto`, this can be generated as follows:
+
+From the 'proto/' directory:
+```
+npx protoc --plugin=../node_modules/.bin/protoc-gen-ts_proto --ts_proto_out=./ ./path-to-your.proto
+```
+`protobufjs` is required to make use of compiled protobufs, and is included in this project.
 
 ## Swagger
 Swagger is currently available at:

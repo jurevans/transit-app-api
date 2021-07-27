@@ -10,54 +10,54 @@ export class GtfsController {
    * @param agencyId
    * @returns
    */
-  @Get('all/:feedIndex')
+  @Get(':feedIndex/all')
   async find(@Param('feedIndex') feedIndex: number) {
     return await this.gtfsService.find({ feedIndex });
   }
 
   /**
    * Find nearest stations by lon/lat
-   * /location/:feedIndex?lat=xxx&lon=xxx
+   * /:feedIndex/location?lat=xxx&lon=xxx
    * @param lon
    * @param lat
    */
-  @Get('location/:feedIndex')
+  @Get(':feedIndex/location')
   async findByLocation(
     @Param('feedIndex') feedIndex: number,
-    @Query('lon') lon: string,
-    @Query('lat') lat: string,
+    @Query('lon') lon: number,
+    @Query('lat') lat: number,
   ) {
-
+    return this.gtfsService.findByLocation({ feedIndex, lon, lat });
   }
 
   /**
-   * Find all stations on by routeId (/:feedIndex/:routeId)
+   * Find all stations on by routeId (/:feedIndex/stations/:routeId)
    * @param routeId
    */
-  @Get('routeId/:feedIndex/:routeId')
+  @Get(':feedIndex/stationsByRoute/:routeId')
   async findByRouteId(
-      @Param('feedIndex') feedIndex: number,
-      @Param('routeId') routeId: string,
-    ) {
-
+    @Param('feedIndex') feedIndex: number,
+    @Param('routeId') routeId: string,
+  ) {
+    return await this.gtfsService.findByRouteId({ feedIndex, routeId });
   }
 
   /**
    * Find all stations provided by comma-delimted list of IDs
    * @param stationIds
    */
-  @Get('station/:feedIndex/:stationIds')
-  async findById(
+  @Get(':feedIndex/stations/:stationIds')
+  async findByIds(
     @Param('feedIndex') feedIndex: number,
-      @Param('stationIds') stationIds: string,
-    ) {
-
+    @Param('stationIds') stationIdString: string,
+  ) {
+    return await this.gtfsService.findByIds({ feedIndex, stationIdString });
   }
 
   /**
    * Find all available routeIds
    */
-  @Get('routes/:feedIndex')
+  @Get(':feedIndex/routes')
   findRouteIds(@Param('feedIndex') feedIndex: number) {
     return this.gtfsService.findRouteIds({ feedIndex });
   }
