@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { CacheInterceptor, CacheModule, Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -24,6 +24,7 @@ import { GtfsService } from './gtfs/gtfs.service';
 import { GtfsModule } from './gtfs/gtfs.module';
 
 import ormconfig from '../ormconfig';
+import { APP_INTERCEPTOR } from '@nestjs/core';
 
 TypeOrmModule.forRootAsync({
   useFactory: async () =>
@@ -34,9 +35,21 @@ TypeOrmModule.forRootAsync({
 });
 
 @Module({
-  imports: [ConfigModule.forRoot(), TypeOrmModule.forRoot(), AgencyModule, StopsModule, RoutesModule, TripsModule, ShapesModule, GtfsModule],
+  imports: [ConfigModule.forRoot(), CacheModule.register({ ttl: 30 }), TypeOrmModule.forRoot(), AgencyModule, StopsModule, RoutesModule, TripsModule, ShapesModule, GtfsModule],
   controllers: [AppController, AgencyController, StopsController, RoutesController, TripsController, ShapesController, GtfsController],
-  providers: [AppService, AgencyService, StopsService, RoutesService, TripsService, ShapesService, GtfsService],
+  providers: [
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: CacheInterceptor,
+    },
+    AppService,
+    AgencyService,
+    StopsService,
+    RoutesService,
+    TripsService,
+    ShapesService,
+    GtfsService,
+  ],
 })
 export class AppModule {
   constructor(private connection: Connection) {}

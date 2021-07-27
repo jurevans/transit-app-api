@@ -1,4 +1,4 @@
-import { Controller, Get, NotFoundException, Param, Query } from '@nestjs/common';
+import { CacheTTL, Controller, Get, NotFoundException, Param, Query } from '@nestjs/common';
 import { StopsService } from './stops.service';
 import { Stops } from 'src/models/entities/stops.entity';
 import { FeatureCollection } from 'src/interfaces/geojson';
@@ -9,6 +9,7 @@ export class StopsController {
   constructor(private stopsService: StopsService) {}
 
   @Get()
+  @CacheTTL(3600)
   async findAll(
     @Query('day') day?: string,
     @Query('geojson') geojson?: string,

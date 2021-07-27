@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Param, Query, NotFoundException, CacheTTL } from '@nestjs/common';
 import { ShapesService } from './shapes.service';
 import { FeatureCollection, LineString } from 'src/interfaces/geojson';
 import { ShapeRawData } from 'src/interfaces/data';
@@ -8,6 +8,7 @@ export class ShapesController {
   constructor(private shapesService: ShapesService) {}
 
   @Get()
+  @CacheTTL(3600)
   findShapes(
     @Query('day') day?: string,
     @Query('geojson') geojson?: string,

@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
+import { CacheTTL, Controller, Get, Param, Query } from '@nestjs/common';
 import { GtfsService } from './gtfs.service';
 
 @Controller('gtfs')
@@ -11,6 +11,7 @@ export class GtfsController {
    * @returns
    */
   @Get(':feedIndex/all')
+  @CacheTTL(60)
   async find(@Param('feedIndex') feedIndex: number) {
     return await this.gtfsService.find({ feedIndex });
   }
@@ -58,6 +59,7 @@ export class GtfsController {
    * Find all available routeIds
    */
   @Get(':feedIndex/routes')
+  @CacheTTL(3600)
   findRouteIds(@Param('feedIndex') feedIndex: number) {
     return this.gtfsService.findRouteIds({ feedIndex });
   }

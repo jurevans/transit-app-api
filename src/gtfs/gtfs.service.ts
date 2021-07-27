@@ -36,6 +36,8 @@ export class GtfsService {
       this._agency = await this.agencyRepository.findOne({ feedIndex });
     }
 
+    // Store results locally so that uncached endpoints don't retigger fetch
+    // until this._EXPIRES has passed:
     if (this._checkExpires()) {
       const { agencyTimezone: TZ, agencyId } = this._agency;
       const config = GTFSConfig[agencyId];
@@ -73,30 +75,32 @@ export class GtfsService {
     }
   }
 
-  // Return everything. This is a placeholder for testing, and is not
-  // a practical endpoint:
+  // Return everything in feed. This is for testing, and is not a practical endpoint:
   async find(props: { feedIndex: number }) {
     const { feedIndex } = props;
-
     await this._update(feedIndex);
     return this._data;
   }
 
-  findByLocation(props: { feedIndex: number, lon: number, lat: number }) {
+  async findByLocation(props: { feedIndex: number, lon: number, lat: number }) {
     const { feedIndex, lon, lat } = props;
+    await this._update(feedIndex);
     return [];
   }
 
-  findByRouteId(props: { feedIndex: number, routeId: string }) {
+  async findByRouteId(props: { feedIndex: number, routeId: string }) {
     const { feedIndex, routeId } = props;
+    await this._update(feedIndex);
     return [];
   }
 
-  findByIds(props: { feedIndex: number, stationIdString: string }) {
+  async findByIds(props: { feedIndex: number, stationIdString: string }) {
     const { feedIndex, stationIdString } = props;
     const stationIds = stationIdString.split(',');
+    await this._update(feedIndex);
     return [];
   }
+
   async findRouteIds(props: { feedIndex: number}): Promise<any> {
     const { feedIndex } = props;
     const routeIdsResults = await this.routesRepository.find({
