@@ -14,6 +14,7 @@ export class GtfsService {
   private _MAX_MINUTES: number;
   private _agency: Agency;
   private _routes: any;
+  private _stations: any;
   private _data: any;
   private _lastUpdated: number;
   private _extendsProto: any;
@@ -25,6 +26,7 @@ export class GtfsService {
     private routesRepository: Repository<Routes>,
   ) {
     this._data = {};
+    this._stations = {};
     this._EXPIRES = 60;
     this._MAX_MINUTES = 30;
   }
@@ -48,7 +50,7 @@ export class GtfsService {
         where: { feedIndex },
       });
       this._routes = routeIdsResults.reduce((routes: any, routeIdResult: any) => {
-        routes[routeIdResult.routeId] = { stops: {} };
+        routes[routeIdResult.routeId] = [];
         return routes;
       }, {});
     }
@@ -72,19 +74,34 @@ export class GtfsService {
       },
     };
 
-    const results = feedUrls.map(async (endpoint: string) => {
+    const results = feedUrls.map(async (endpoint: string): Promise<any> => {
       const response = await fetch(endpoint, options);
       const body = await response.buffer();
       const feed = GTFS.FeedMessage.decode(body);
       return GTFS.FeedMessage.toJSON(feed);
     });
 
-    this._lastUpdated = DateTime.now().toSeconds();
     const data = await Promise.all(results);
-    this._data = {
-      data,
-      updated: this._lastUpdated,
-    };
+
+    data.forEach((feedResponse: any) => {
+      const entities = feedResponse.entity;
+      entities.forEach((entity: any) => {
+        if (entity.tripUpdate) {
+          const { trip, stopTimeUpdate } = entity.tripUpdate;
+          const { routeId } = trip;
+
+          stopTimeUpdate.forEach((stop: any) => {
+            if (!(stop.stopTime < this._lastUpdated)) {
+              this._stations[stop.stopId] = stop;
+              this._routes[routeId].push(stop.stopId);
+            }
+          });
+        }
+      })
+    });
+
+    this._lastUpdated = DateTime.now().toSeconds();
+    this._data = data;
   }
 
   // Use PostGIS to lookup nearest stations:
@@ -112,7 +129,10 @@ export class GtfsService {
     if (this._isExpired()) {
       await this._update(feedIndex);
     }
-    return this._data;
+    return {
+      data: this._data,
+      updated: this._lastUpdated,
+    };
   }
 
   public async findByLocation(props: { feedIndex: number, lon: number, lat: number }) {
@@ -123,9 +143,23 @@ export class GtfsService {
     }
 
     const nearestStops = await this._getNearestStops(lon, lat);
-    const stops = nearestStops.map((station: any) => station.stopId);
-    // TODO: Return realtime stop data with these stopIds
-    return stops;
+    const stopIds = nearestStops.map((station: any) => station.stopId);
+
+    const stopTimes = [];
+    stopIds.forEach((stopId: string) => {
+      const stopTime = this._stations[stopId];
+      if(stopTime) {
+        stopTimes.push({
+          stopId: stopTime.stopId,
+          time: stopTime.arrival.time,
+        });
+      }
+    });
+
+    return {
+      data: stopTimes,
+      updated: this._lastUpdated,
+    };
   }
 
   public async findByRouteId(props: { feedIndex: number, routeId: string }) {
@@ -133,7 +167,18 @@ export class GtfsService {
     if (this._isExpired()) {
       await this._update(feedIndex);
     }
-    return [];
+    const stopIds = this._routes[routeId];
+
+    return {
+      data: stopIds.map((id: string) => {
+        const stop = this._stations[id];
+        return {
+          stopId: stop.stopId,
+          time: stop.arrival?.time,
+        };
+      }),
+      updated: this._lastUpdated,
+    };
   }
 
   public async findByIds(props: { feedIndex: number, stationIdString: string }) {

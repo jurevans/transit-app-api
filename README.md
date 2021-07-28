@@ -121,7 +121,7 @@ http://localhost:5000/api/v1/docs
   - __NOTE__: This is an impractical endpoint, and is only here for testing
 - `/api/v1/gtfs/1/location?lat=xxx&lon=xxx`
   - __TODO__: Find nearest stations to lat/lon
-- `/api/v1/gtfs/1/stationsByRoute/7X`
+- `/api/v1/gtfs/1/route/7X`
   - __TODO__: Find all stations by route id `7X`
 - `/api/v1/gtfs/1/stations/101N,103N,101S,203N`
   - __TODO__: Find stations by comma-delimited list of station IDs
