@@ -4,6 +4,10 @@ This is the backend companion to [transit-app-next](https://github.com/jurevans/
 
 This project built with [NestJS](https://nestjs.com/), [TypeORM](https://typeorm.io/) and [TypeScript](https://www.typescriptlang.org/). This project is in its infancy, and should be considered a work-in-progress! There is so much more to do.
 
+The GTFS-Realtime API endpoints are inspired by [MTAPI](https://github.com/jonthornton/MTAPI/), a Python API that exposes GTFS-Realtime protocol buffers as JSON. While `MTAPI` is specifically serving MTA (NYC) data, it serves as a good example for organizing realtime transit feed responses from a large transit system.
+
+The database that `transit-app-api` uses allows for multiple feeds to be stored simultaneously. A good use case for this would be to serve data for not only subways, but also bus routes/stops, etc. An example of this will eventually be built into this project.
+
 ## Usage:
 
 Run:

@@ -24,6 +24,7 @@ export class GtfsController {
    * @param lat
    */
   @Get(':feedIndex/location')
+  @CacheTTL(86400)
   async findByLocation(
     @Param('feedIndex') feedIndex: number,
     @Query('lon') lon: number,
