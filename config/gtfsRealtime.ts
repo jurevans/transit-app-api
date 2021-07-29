@@ -14,6 +14,13 @@ const gtfsRealtime = {
       'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-si',    // SIR
     ],
     proto: 'nyct-subway',
+    // Specify any differences between static and RT routeIds here:
+    // Key = GTFS Realtime Route ID, Value = GTFS Static Route ID
+    routeIdOverrides: {
+      'SIR': 'SI',
+      'S': 'GS',
+      'SS': 'FS',
+    },
   }
 };
 

@@ -36,7 +36,17 @@ export class GtfsService {
       || (DateTime.now().toSeconds() - this._lastUpdated > this._EXPIRES);
   }
 
-  // Update GTFS realtime data if necessary
+  // Check for override config to translate routeId if needed:
+  private _checkRouteIdOverride(routeId: string) {
+    const config = GTFSConfig[this._agency.agencyId];
+    if (!config.hasOwnProperty('routeIdOverrides')) {
+      return routeId;
+    }
+    const override = config.routeIdOverrides[routeId];
+    return override ? override : routeId;
+  }
+
+  // Update GTFS realtime data
   private async _update(feedIndex: number) {
     // Initialize agency
     if (!this._agency) {
@@ -49,6 +59,7 @@ export class GtfsService {
         select: [ 'routeId'],
         where: { feedIndex },
       });
+
       this._routes = routeIdsResults.reduce((routes: any, routeIdResult: any) => {
         routes[routeIdResult.routeId] = [];
         return routes;
@@ -63,7 +74,6 @@ export class GtfsService {
       // Store and attempt to use extension of gtfs-realtime.proto
       // NOTE: This may be removed if deemed not-useful-enough.
       this._extendsProto = proto && await import(`../../proto/${proto}`);
-      console.log(`Imported module ${proto}`)
     }
 
     const { GTFS_REALTIME_ACCESS_KEY } = process.env;
@@ -91,9 +101,11 @@ export class GtfsService {
           const { routeId } = trip;
 
           stopTimeUpdate.forEach((stop: any) => {
-            if (!(stop.stopTime < this._lastUpdated)) {
+            if (!(stop.stopTime < this._lastUpdated)
+              && !(stop.stopTime > this._MAX_MINUTES)) {
               this._stations[stop.stopId] = stop;
-              this._routes[routeId].push(stop.stopId);
+              const useRouteId = this._checkRouteIdOverride(routeId);
+              this._routes[useRouteId].push(stop.stopId);
             }
           });
         }
@@ -105,7 +117,7 @@ export class GtfsService {
   }
 
   // Use PostGIS to lookup nearest stations:
-  private async _getNearestStops(lon, lat) {
+  private async _getNearestStops(lon: number, lat: number) {
     const manager = getManager();
 
     return await manager.query(`
@@ -144,8 +156,8 @@ export class GtfsService {
 
     const nearestStops = await this._getNearestStops(lon, lat);
     const stopIds = nearestStops.map((station: any) => station.stopId);
-
     const stopTimes = [];
+
     stopIds.forEach((stopId: string) => {
       const stopTime = this._stations[stopId];
       if(stopTime) {
@@ -164,9 +176,11 @@ export class GtfsService {
 
   public async findByRouteId(props: { feedIndex: number, routeId: string }) {
     const { feedIndex, routeId } = props;
+
     if (this._isExpired()) {
       await this._update(feedIndex);
     }
+
     const stopIds = this._routes[routeId];
 
     return {
@@ -184,6 +198,7 @@ export class GtfsService {
   public async findByIds(props: { feedIndex: number, stationIdString: string }) {
     const { feedIndex, stationIdString } = props;
     const stationIds = stationIdString.split(',');
+    // TODO: Implement
     if (this._isExpired()) {
       await this._update(feedIndex);
     }
