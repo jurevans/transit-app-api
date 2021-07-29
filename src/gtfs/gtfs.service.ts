@@ -8,15 +8,20 @@ import { Agency } from 'src/entities/agency.entity';
 import * as GTFS from 'proto/gtfs-realtime';
 import { Routes } from 'src/entities/routes.entity';
 
+type AgencyLookup = { [key: string]: Agency };
+
 @Injectable()
 export class GtfsService {
+  // Constants
   private _EXPIRES: number;
   private _MAX_MINUTES: number;
-  private _agency: Agency;
-  private _routes: any;
+  // Data
+  private _agencies: AgencyLookup;
   private _stations: any;
+  private _routes: any;
   private _data: any;
-  private _lastUpdated: number;
+  // Etc.
+  private _lastUpdated: any;
   private _extendsProto: any;
 
   constructor(
@@ -25,20 +30,26 @@ export class GtfsService {
     @InjectRepository(Routes)
     private routesRepository: Repository<Routes>,
   ) {
-    this._data = {};
-    this._stations = {};
     this._EXPIRES = 60;
     this._MAX_MINUTES = 30;
+
+    this._agencies = {};
+    this._stations = {};
+    this._routes = {};
+    this._data = {};
+
+    this._lastUpdated = {};
   }
 
-  private _isExpired() {
-    return !this._lastUpdated
-      || (DateTime.now().toSeconds() - this._lastUpdated > this._EXPIRES);
+  private _isExpired(feedIndex: number) {
+    return !this._lastUpdated[feedIndex]
+      || (DateTime.now().toSeconds() - this._lastUpdated[feedIndex] > this._EXPIRES);
   }
 
   // Check for override config to translate routeId if needed:
-  private _checkRouteIdOverride(routeId: string) {
-    const config = GTFSConfig[this._agency.agencyId];
+  private _checkRouteIdOverride(feedIndex: number, routeId: string) {
+    const { agencyId } = this._agencies[feedIndex];
+    const config = GTFSConfig[feedIndex][agencyId];
     if (!config.hasOwnProperty('routeIdOverrides')) {
       return routeId;
     }
@@ -49,25 +60,25 @@ export class GtfsService {
   // Update GTFS realtime data
   private async _update(feedIndex: number) {
     // Initialize agency
-    if (!this._agency) {
-      this._agency = await this.agencyRepository.findOne({ feedIndex });
+    if (!this._agencies.hasOwnProperty(feedIndex)) {
+      this._agencies[feedIndex] = await this.agencyRepository.findOne({ feedIndex });
     }
 
-    if (!this._routes) {
+    if (!this._routes[feedIndex]) {
       // Initialize route lookup
       const routeIdsResults = await this.routesRepository.find({
         select: [ 'routeId'],
         where: { feedIndex },
       });
 
-      this._routes = routeIdsResults.reduce((routes: any, routeIdResult: any) => {
+      this._routes[feedIndex] = routeIdsResults.reduce((routes: any, routeIdResult: any) => {
         routes[routeIdResult.routeId] = [];
         return routes;
       }, {});
     }
 
-    const { agencyTimezone: TZ, agencyId } = this._agency;
-    const config = GTFSConfig[agencyId];
+    const { agencyTimezone: TZ, agencyId } = this._agencies[feedIndex];
+    const config = GTFSConfig[feedIndex][agencyId];
     const { feedUrls, proto } = config;
 
     if (!this._extendsProto && proto) {
@@ -101,23 +112,28 @@ export class GtfsService {
           const { routeId } = trip;
 
           stopTimeUpdate.forEach((stop: any) => {
-            if (!(stop.stopTime < this._lastUpdated)
+            if (!(stop.stopTime < this._lastUpdated[feedIndex])
               && !(stop.stopTime > this._MAX_MINUTES)) {
               this._stations[stop.stopId] = stop;
-              const useRouteId = this._checkRouteIdOverride(routeId);
-              this._routes[useRouteId].push(stop.stopId);
+              const useRouteId = this._checkRouteIdOverride(feedIndex, routeId);
+              this._routes[feedIndex][useRouteId].push(stop.stopId);
             }
           });
         }
       })
     });
 
-    this._lastUpdated = DateTime.now().toSeconds();
+    this._lastUpdated[feedIndex] = DateTime.now().toSeconds();
     this._data = data;
   }
 
   // Use PostGIS to lookup nearest stations:
-  private async _getNearestStops(lon: number, lat: number) {
+  private async _getNearestStops(props: {
+    feedIndex: number,
+    lon: number,
+    lat: number,
+  }) {
+    const { feedIndex, lon, lat } = props;
     const manager = getManager();
 
     return await manager.query(`
@@ -128,7 +144,7 @@ export class GtfsService {
         ST_Y(ST_Transform(s.the_geom, 4326)) AS "latitude",
         ST_Distance(s.the_geom, 'SRID=4326;POINT(${lon} ${lat})') AS "distance"
       FROM stops s
-      WHERE s.feed_index = ${this._agency.feedIndex}
+      WHERE s.feed_index = ${feedIndex}
       ORDER BY
       s.the_geom <-> 'SRID=4326;POINT(${lon} ${lat})'::geometry
       LIMIT 5`
@@ -138,23 +154,23 @@ export class GtfsService {
   // Return everything in feed. This is for testing, and is not a practical endpoint:
   public async find(props: { feedIndex: number }) {
     const { feedIndex } = props;
-    if (this._isExpired()) {
+    if (this._isExpired(feedIndex)) {
       await this._update(feedIndex);
     }
     return {
       data: this._data,
-      updated: this._lastUpdated,
+      updated: this._lastUpdated[feedIndex],
     };
   }
 
   public async findByLocation(props: { feedIndex: number, lon: number, lat: number }) {
     const { feedIndex, lon, lat } = props;
 
-    if (this._isExpired()) {
+    if (this._isExpired(feedIndex)) {
       await this._update(feedIndex);
     }
 
-    const nearestStops = await this._getNearestStops(lon, lat);
+    const nearestStops = await this._getNearestStops({ feedIndex, lon, lat });
     const stopIds = nearestStops.map((station: any) => station.stopId);
     const stopTimes = [];
 
@@ -170,18 +186,17 @@ export class GtfsService {
 
     return {
       data: stopTimes,
-      updated: this._lastUpdated,
+      updated: this._lastUpdated[feedIndex],
     };
   }
 
   public async findByRouteId(props: { feedIndex: number, routeId: string }) {
     const { feedIndex, routeId } = props;
-
-    if (this._isExpired()) {
+    if (this._isExpired(feedIndex)) {
       await this._update(feedIndex);
     }
 
-    const stopIds = this._routes[routeId];
+    const stopIds = this._routes[feedIndex][routeId];
 
     return {
       data: stopIds.map((id: string) => {
@@ -191,7 +206,7 @@ export class GtfsService {
           time: stop.arrival?.time,
         };
       }),
-      updated: this._lastUpdated,
+      updated: this._lastUpdated[feedIndex],
     };
   }
 
@@ -199,7 +214,7 @@ export class GtfsService {
     const { feedIndex, stationIdString } = props;
     const stationIds = stationIdString.split(',');
     // TODO: Implement
-    if (this._isExpired()) {
+    if (this._isExpired(feedIndex)) {
       await this._update(feedIndex);
     }
     return [];
