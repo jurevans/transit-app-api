@@ -4,9 +4,10 @@ import { GtfsService } from './gtfs.service';
 import { GtfsController } from './gtfs.controller';
 import { Agency } from 'src/entities/agency.entity';
 import { Routes } from 'src/entities/routes.entity';
+import { Stops } from 'src/entities/stops.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Agency, Routes])],
+  imports: [TypeOrmModule.forFeature([Agency, Routes, Stops])],
   exports: [TypeOrmModule],
   providers: [GtfsService],
   controllers: [GtfsController],

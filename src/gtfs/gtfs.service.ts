@@ -1,12 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, getManager } from 'typeorm';
+import { Repository, getManager, IsNull, Not } from 'typeorm';
 import { DateTime } from 'luxon';
 import fetch from 'node-fetch';
 import GTFSConfig from '../../config/gtfsRealtime';
 import { Agency } from 'src/entities/agency.entity';
-import * as GTFS from 'proto/gtfs-realtime';
 import { Routes } from 'src/entities/routes.entity';
+import { Stops } from 'src/entities/stops.entity';
+import { Station } from './station.class';
+import * as GTFS from 'proto/gtfs-realtime';
+
 
 type AgencyLookup = { [key: string]: Agency };
 
@@ -17,7 +20,9 @@ export class GtfsService {
   private _MAX_MINUTES: number;
   // Data
   private _agencies: AgencyLookup;
+  private _stationsData: any;
   private _stations: any;
+  private _stopsIndex: any;
   private _routes: any;
   private _data: any;
   // Etc.
@@ -29,12 +34,16 @@ export class GtfsService {
     private agencyRepository: Repository<Agency>,
     @InjectRepository(Routes)
     private routesRepository: Repository<Routes>,
+    @InjectRepository(Stops)
+    private stopsRepository: Repository<Stops>,
   ) {
     this._EXPIRES = 60;
     this._MAX_MINUTES = 30;
 
     this._agencies = {};
+    this._stationsData = {};
     this._stations = {};
+    this._stopsIndex = {};
     this._routes = {};
     this._data = {};
 
@@ -57,11 +66,77 @@ export class GtfsService {
     return override ? override : routeId;
   }
 
-  // Update GTFS realtime data
-  private async _update(feedIndex: number) {
-    // Initialize agency
+  private async _getStops(feedIndex: number, isParentStation: boolean): Promise<Stops[]> {
+    const stops = await this.stopsRepository.find({
+      where: {
+        feedIndex,
+        parentStation: isParentStation ? IsNull() : Not(IsNull()),
+      },
+    });
+    return stops;
+  }
+
+  // Provide a mapping of stop to parent station:
+  private _indexStops(stations: any) {
+    const stops = {};
+    for (const id in stations) {
+      for (const stopId in stations[id].stops) {
+        stops[stopId] = id;
+      }
+    }
+    return stops;
+  }
+
+  private async _initialize(feedIndex: number) {
     if (!this._agencies.hasOwnProperty(feedIndex)) {
+      // Initialize Agency
       this._agencies[feedIndex] = await this.agencyRepository.findOne({ feedIndex });
+    }
+
+    if (!this._stationsData.hasOwnProperty(feedIndex)) {
+      // Initialize Parent Stations
+      this._stationsData[feedIndex] = {};
+      const parentStations = await this._getStops(feedIndex, true);
+      const stops = await this._getStops(feedIndex, false);
+
+      parentStations.forEach((station: any) => {
+        this._stationsData[feedIndex][station.stopId] = {
+          id: station.stopId,
+          name: station.stopName,
+          location: [
+            station.stopLon,
+            station.stopLat,
+          ],
+          stops: stops
+            .filter((stop: Stops) => stop.parentStation === station.stopId)
+            .map((stop: Stops) => ({
+              id: stop.stopId,
+              location: [
+                stop.stopLon,
+                stop.stopLat,
+              ]
+            }))
+            .reduce((obj: any, stop: any) => {
+              obj[stop.id] = stop;
+              return obj;
+            }, {})
+        };
+      });
+    }
+
+    if (!this._stations[feedIndex]) {
+      // Initialize stations object
+      this._stations[feedIndex] = {};
+    }
+
+    for (const id in this._stationsData[feedIndex]) {
+      // Instantiate Station classes
+      this._stations[feedIndex][id] = new Station(this._stationsData[feedIndex][id]);
+    }
+
+    if (!this._stopsIndex[feedIndex]) {
+      // Initialize stops to parent station index
+      this._stopsIndex[feedIndex] = this._indexStops(this._stationsData[feedIndex]);
     }
 
     if (!this._routes[feedIndex]) {
@@ -76,6 +151,11 @@ export class GtfsService {
         return routes;
       }, {});
     }
+  }
+
+  // Update GTFS realtime data
+  private async _update(feedIndex: number) {
+    await this._initialize(feedIndex);
 
     const { agencyTimezone: TZ, agencyId } = this._agencies[feedIndex];
     const config = GTFSConfig[feedIndex][agencyId];
@@ -114,7 +194,7 @@ export class GtfsService {
           stopTimeUpdate.forEach((stop: any) => {
             if (!(stop.stopTime < this._lastUpdated[feedIndex])
               && !(stop.stopTime > this._MAX_MINUTES)) {
-              this._stations[stop.stopId] = stop;
+              //this._stations[stop.stopId] = stop;
               const useRouteId = this._checkRouteIdOverride(feedIndex, routeId);
               this._routes[feedIndex][useRouteId].push(stop.stopId);
             }
@@ -175,7 +255,7 @@ export class GtfsService {
     const stopTimes = [];
 
     stopIds.forEach((stopId: string) => {
-      const stopTime = this._stations[stopId];
+      const stopTime = this._stationsData[stopId];
       if(stopTime) {
         stopTimes.push({
           stopId: stopTime.stopId,
@@ -196,16 +276,8 @@ export class GtfsService {
       await this._update(feedIndex);
     }
 
-    const stopIds = this._routes[feedIndex][routeId];
-
     return {
-      data: stopIds.map((id: string) => {
-        const stop = this._stations[id];
-        return {
-          stopId: stop.stopId,
-          time: stop.arrival?.time,
-        };
-      }),
+      data: this._routes[feedIndex][routeId],
       updated: this._lastUpdated[feedIndex],
     };
   }
@@ -213,10 +285,12 @@ export class GtfsService {
   public async findByIds(props: { feedIndex: number, stationIdString: string }) {
     const { feedIndex, stationIdString } = props;
     const stationIds = stationIdString.split(',');
-    // TODO: Implement
     if (this._isExpired(feedIndex)) {
       await this._update(feedIndex);
     }
-    return [];
+    // TODO: This should look in this._stations, not this._stationsData,
+    // once it is being populated correctly.
+    return stationIds.map((stationId: string) =>
+      this._stationsData[feedIndex][stationId]);
   }
 }
