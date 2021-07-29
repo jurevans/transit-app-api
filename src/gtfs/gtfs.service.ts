@@ -124,7 +124,7 @@ export class GtfsService {
     });
 
     this._lastUpdated[feedIndex] = DateTime.now().toSeconds();
-    this._data = data;
+    this._data[feedIndex] = data;
   }
 
   // Use PostGIS to lookup nearest stations:
@@ -158,7 +158,7 @@ export class GtfsService {
       await this._update(feedIndex);
     }
     return {
-      data: this._data,
+      data: this._data[feedIndex],
       updated: this._lastUpdated[feedIndex],
     };
   }
