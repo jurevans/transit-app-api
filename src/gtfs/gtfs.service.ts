@@ -60,7 +60,8 @@ export class GtfsService {
     return feed;
   }
 
-  // Return everything in feed. This is for testing, and is not a practical endpoint:
+  // Return everything in the raw feed.
+  // This is for testing, and is not a practical endpoint:
   public async find(props: { feedIndex: number }) {
     const { feedIndex } = props;
     const feed = await this._getFeed(feedIndex);
@@ -95,11 +96,23 @@ export class GtfsService {
 
   public async findByRouteId(props: { feedIndex: number, routeId: string }) {
     const { feedIndex, routeId } = props;
+    const useRouteId = routeId.toUpperCase();
     const feed = await this._getFeed(feedIndex);
     await feed.update();
 
+    const stopsForRoute = feed.routes[useRouteId];
+    const stations = {};
+
+    stopsForRoute.forEach((stopId: string) => {
+      const stationId = feed.stopsIndex[stopId];
+      const station = feed.stations[stationId];
+      if (!stations[stationId] && station) {
+        stations[stationId] = station.serialize();
+      }
+    });
+
     return {
-      data: feed.routes[routeId],
+      data: stations,
       updated: feed.lastUpdated,
     };
   }
@@ -110,7 +123,10 @@ export class GtfsService {
     const feed = await this._getFeed(feedIndex);
     await feed.update();
 
-    return stationIds.map((stationId: string) =>
-      feed.stations[stationId]);
+    return {
+      data: stationIds.map((stationId: string) =>
+        feed.stations[stationId].serialize()),
+      updated: feed.lastUpdated,
+    };
   }
 }

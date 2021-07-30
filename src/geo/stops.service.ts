@@ -25,12 +25,12 @@ export class StopsService {
       routes AS (
         SELECT
           DISTINCT ON (r.route_id) r.route_id,
-            r.route_short_name,
-            r.route_long_name,
-            r.route_color,
-            r.route_desc,
-            r.route_url,
-            t.trip_id AS trip_id
+          r.route_short_name,
+          r.route_long_name,
+          r.route_color,
+          r.route_desc,
+          r.route_url,
+          t.trip_id AS trip_id
         FROM gtfs.routes r
         INNER JOIN trips t
           ON t.route_id = r.route_id

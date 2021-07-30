@@ -45,7 +45,7 @@ export class Feed {
   private async _getExtendsProto() {
     const { proto } = this._config;
     if (!this._extendsProto && proto) {
-      this._extendsProto = proto && await import(`../../../proto/${proto}`);
+      this._extendsProto = await import(`../../../proto/${proto}`);
     }
   }
 
@@ -70,7 +70,7 @@ export class Feed {
     return stops;
   }
 
-  public initializeStations(stations, stops: Stops[]): void {
+  public initializeStations(stations: any, stops: Stops[]): void {
     stations.forEach((station: any) => {
       this._stationsData[station.stopId] = {
         id: station.stopId,
@@ -106,7 +106,7 @@ export class Feed {
     }
   }
 
-  public initializeRoutes(routeIds: any = []) {
+  public initializeRoutes(routeIds: string[] = []) {
     this.routes = routeIds.reduce((routes: any, routeId: any) => {
       routes[routeId] = [];
       return routes;
@@ -116,6 +116,10 @@ export class Feed {
   public async update() {
     if (!this._isExpired()) {
       return;
+    }
+
+    for (const id in this.stations) {
+      this.stations[id].clearTrainData();
     }
 
     const { feedUrls, accessKey } =  this._config;

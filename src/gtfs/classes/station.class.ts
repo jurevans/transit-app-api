@@ -1,11 +1,11 @@
 export class Station {
-  public last_update: number;
+  public lastUpdate: number;
   public trains: any;
   public routes: any[];
   public station: any;
 
   constructor(station) {
-    this.last_update = null;
+    this.lastUpdate = null;
     this.trains = [];
     this.station = station;
     this.routes = [];
@@ -24,13 +24,13 @@ export class Station {
       route: routeId,
       time: trainTime,
     });
-    this.last_update = feedTime;
+    this.lastUpdate = feedTime;
   }
 
   public clearTrainData(): void {
     this.trains = [];
     this.routes = [];
-    this.last_update = null;
+    this.lastUpdate = null;
   }
 
   public sortTrains(maxTrains) {
@@ -38,13 +38,12 @@ export class Station {
   }
 
   public serialize() {
-    const { N, S } = this.trains;
+    const { routes, trains, lastUpdate } = this;
     return {
-      N,
-      S,
-      routes: this.routes,
-      last_update: this.last_update,
       ...this.station,
+      routes,
+      trains,
+      lastUpdate,
     }
   }
 }
