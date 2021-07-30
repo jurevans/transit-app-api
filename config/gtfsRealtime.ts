@@ -3,7 +3,7 @@
  */
 const gtfsRealtime = [
   {
-    feedIndex: '1',
+    feedIndex: 1,
     agencyId: 'MTA NYCT',
     feedUrls: [
       'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs',       // 1,2,3,4,5,6,S

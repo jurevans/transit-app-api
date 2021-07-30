@@ -54,7 +54,7 @@ You will need to configure the GTFS-Realtime endpoint URLs, any proto extension 
 ```javascript
 const gtfsRealtime = [
   {
-    feedIndex: '1',
+    feedIndex: 1,
     agencyId: 'MTA NYCT',
     feedUrls: [
       'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs',
