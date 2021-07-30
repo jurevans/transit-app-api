@@ -1,10 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, getManager, IsNull, Not } from 'typeorm';
+import { Repository, IsNull, Not } from 'typeorm';
 import { Agency } from 'src/entities/agency.entity';
 import { Routes } from 'src/entities/routes.entity';
 import { Stops } from 'src/entities/stops.entity';
 import { Feed } from './classes/feed.class';
+import { Station } from './classes/station.class';
+import { getDistance } from 'src/util';
 
 @Injectable()
 export class GtfsService {
@@ -58,31 +60,6 @@ export class GtfsService {
     return feed;
   }
 
-  // Use PostGIS to lookup nearest stations:
-  // TODO: NOPE!
-  private async _getNearestStops(props: {
-    feedIndex: number,
-    lon: number,
-    lat: number,
-  }) {
-    const { feedIndex, lon, lat } = props;
-    const manager = getManager();
-
-    return await manager.query(`
-      SELECT
-        s.stop_name AS "stopName",
-        s.stop_id AS "stopId",
-        ST_X(ST_Transform(s.the_geom, 4326)) AS "longitude",
-        ST_Y(ST_Transform(s.the_geom, 4326)) AS "latitude",
-        ST_Distance(s.the_geom, 'SRID=4326;POINT(${lon} ${lat})') AS "distance"
-      FROM stops s
-      WHERE s.feed_index = ${feedIndex}
-      ORDER BY
-      s.the_geom <-> 'SRID=4326;POINT(${lon} ${lat})'::geometry
-      LIMIT 5`
-    );
-  }
-
   // Return everything in feed. This is for testing, and is not a practical endpoint:
   public async find(props: { feedIndex: number }) {
     const { feedIndex } = props;
@@ -97,30 +74,21 @@ export class GtfsService {
 
   public async findByLocation(props: { feedIndex: number, lon: number, lat: number }) {
     const { feedIndex, lon, lat } = props;
+    const LIMIT = 5;
     const feed = await this._getFeed(feedIndex);
     await feed.update();
-/*
-    const nearestStops = await this._getNearestStops({ feedIndex, lon, lat });
-    const stopIds = nearestStops.map((station: any) => station.stopId);
-    const stopTimes = [];
 
-    stopIds.forEach((stopId: string) => {
-      const stopTime = this._stationsData[stopId];
-      if(stopTime) {
-        stopTimes.push({
-          stopId: stopTime.stopId,
-          time: stopTime.arrival.time,
-        });
-      }
+    const sortableStations = Object.values(feed.stations);
+    const stations = sortableStations.map((station: Station) => station.serialize());
+
+    stations.sort((a: any, b: any) => {
+      const dist1 = getDistance([lon, lat], a.location);
+      const dist2 = getDistance([lon, lat], b.location);
+      return dist1 - dist2;
     });
 
     return {
-      data: stopTimes,
-      updated: this._lastUpdated[feedIndex],
-    };
-*/
-    return {
-      data: feed.stations,
+      data: stations.slice(0, LIMIT),
       updated: feed.lastUpdated,
     }
   }

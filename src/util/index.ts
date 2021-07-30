@@ -16,25 +16,17 @@ export const getCurrentDay = (): string => {
   return today;
 };
 
+export type Coordinate = [number, number];
 /**
  * Get distance between two points
  * See: https://www.geodatasource.com/developers/javascript
- * @param {number} lat1
- * @param {number} lon1
- * @param {number} lat2
- * @param {number} lon2
- * @param {string} unit
+ * @param {Coordinate} coord1
+ * @param {Coordinate} coord2
  * @returns {number} Distance
  */
-interface GetDistanceOptions {
-  lat1: number;
-  lon1: number;
-  lat2: number;
-  lon2: number;
-  unit: string;
-}
-export const getDistance = (props: GetDistanceOptions) => {
-  const { lat1, lon1, lat2, lon2, unit } = props;
+export const getDistance = (coord1: Coordinate, coord2: Coordinate, unit?: string) => {
+  const [lon1, lat1] = coord1;
+  const [lon2, lat2] = coord2;
 
   if ((lat1 === lat2) && (lon1 === lon2)) {
     return 0;
