@@ -6,7 +6,7 @@ export class Station {
 
   constructor(station) {
     this.last_update = null;
-    this.trains = {};
+    this.trains = [];
     this.station = station;
     this.routes = [];
   }
@@ -17,10 +17,10 @@ export class Station {
     trainTime: number,
     feedTime: number,
   }): void {
-    const { routeId, direction, trainTime, feedTime } = props;
-    this.routes.push(routeId);
-    this.trains[direction] = this.trains[direction] || [];
-    this.trains[direction].push({
+    const { routeId, trainTime, feedTime } = props;
+    if (this.routes.indexOf(routeId) < 0)
+      this.routes.push(routeId);
+    this.trains.push({
       route: routeId,
       time: trainTime,
     });
@@ -28,17 +28,13 @@ export class Station {
   }
 
   public clearTrainData(): void {
-    // TODO: Direction should not be specific to MTA
-    this.trains['N'] = [];
-    this.trains['S'] = [];
+    this.trains = [];
     this.routes = [];
     this.last_update = null;
   }
 
   public sortTrains(maxTrains) {
-    // TODO: Direction should not be specific to MTA
-    this.trains['S'].sort((a, b) => (a.time > b.time) ? 1 : -1).slice(0, maxTrains);
-    this.trains['N'].sort((a, b) => (a.time > b.time) ? 1 : -1).slice(0, maxTrains);
+    this.trains.sort((a, b) => (a.time > b.time) ? 1 : -1).slice(0, maxTrains);
   }
 
   public serialize() {

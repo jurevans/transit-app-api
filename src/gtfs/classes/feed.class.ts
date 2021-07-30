@@ -135,6 +135,7 @@ export class Feed {
     });
 
     const data = await Promise.all(results);
+    this.lastUpdated = DateTime.now().toSeconds();
 
     data.forEach((feedResponse: any) => {
       const entities = feedResponse.entity;
@@ -144,9 +145,23 @@ export class Feed {
           const { routeId } = trip;
 
           stopTimeUpdate.forEach((stop: any) => {
-            if (!(stop.stopTime < this.lastUpdated)
-              && !(stop.stopTime > this._MAX_MINUTES)) {
-              //this._stations[stop.stopId] = stop;
+            const stopTime = stop.arrival?.time;
+            if (!stopTime) {
+              return;
+            }
+            if (!(stopTime < this.lastUpdated)
+              && !(stopTime > (this.lastUpdated + (this._MAX_MINUTES * 60)))) {
+              const stationId = this.stopsIndex[stop.stopId];
+              const station = this.stations[stationId];
+
+              if (station) {
+                station.addTrain({
+                  routeId,
+                  trainTime: stopTime,
+                  feedTime: this.lastUpdated,
+                });
+              }
+
               const useRouteId = this._checkRouteIdOverride(routeId);
               this.routes[useRouteId].push(stop.stopId);
             }
@@ -155,7 +170,6 @@ export class Feed {
       })
     });
 
-    this.lastUpdated = DateTime.now().toSeconds();
     this.data = data;
   }
 }
