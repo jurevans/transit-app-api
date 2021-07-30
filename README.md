@@ -48,26 +48,32 @@ make load GTFS=gtfs.zip
 Where `gtfs.zip` is the name of the downloaded `.zip` file containing the GTFS data.
 
 ## Additional environment configuration:
-You will need the following variable defined in a `.env` file:
-```bash
-GTFS_REALTIME_ACCESS_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-```
 
-The key is used to authenticate requests to the API urls defined in `/config/gtfsRealtime.ts`:
+You will need to configure the GTFS-Realtime endpoint URLs, any proto extension to the default `gtfs-realtime.proto` file, and name of the access key requested from the transit authority to authenticate these requests in `/config/gtfsRealtime.ts`:
+
 ```javascript
-const gtfsRealtime = {
-  'MTA NYCT': {
+const gtfsRealtime = [
+  {
+    feedIndex: '1',
+    agencyId: 'MTA NYCT',
     feedUrls: [
       'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs',
       'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-ace',
       'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-bdfm',
     ],
     proto: 'nyct-subway',
-  }
-};
+    accessKey: 'GTFS_REALTIME_ACCESS_KEY',
+  },
+];
 ```
 
-These are keyed by the agency ID found in the agency table (in this example, `MTA NYCT`).
+Using the above configuration as an example, you would need the following variable defined in a `.env` file:
+
+```bash
+GTFS_REALTIME_ACCESS_KEY=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+```
+
+You will need a unique access key for each group of feed endpoints you want to authenticate. In general, you may only have one configuration in here (for this example, we are configuring for the NYC MTA subway system, but we may want to add endpoints for buses as well). These are keyed by the unique `feedIndex` and `agencyId` values found in the agency table (in this example, `1` and `MTA NYCT`).
 
 The `proto` string refers to a complied `.proto` file that is an extension of the base `gtfs-realtime.proto`, in this case, `nyct-subway.proto`. This gets dynamically loaded should it appear in the config, however, making use of the additional bindings it provides is still in the works.
 

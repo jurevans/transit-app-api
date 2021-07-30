@@ -7,9 +7,8 @@ import GTFSConfig from '../../config/gtfsRealtime';
 import { Agency } from 'src/entities/agency.entity';
 import { Routes } from 'src/entities/routes.entity';
 import { Stops } from 'src/entities/stops.entity';
-import { Station } from './station.class';
+import { Station } from './classes/station.class';
 import * as GTFS from 'proto/gtfs-realtime';
-
 
 type AgencyLookup = { [key: string]: Agency };
 
@@ -28,6 +27,7 @@ export class GtfsService {
   // Etc.
   private _lastUpdated: any;
   private _extendsProto: any;
+  private _config: any;
 
   constructor(
     @InjectRepository(Agency)
@@ -48,6 +48,7 @@ export class GtfsService {
     this._data = {};
 
     this._lastUpdated = {};
+    this._config = {};
   }
 
   private _isExpired(feedIndex: number) {
@@ -57,8 +58,7 @@ export class GtfsService {
 
   // Check for override config to translate routeId if needed:
   private _checkRouteIdOverride(feedIndex: number, routeId: string) {
-    const { agencyId } = this._agencies[feedIndex];
-    const config = GTFSConfig[feedIndex][agencyId];
+    const config = this._config[feedIndex];
     if (!config.hasOwnProperty('routeIdOverrides')) {
       return routeId;
     }
@@ -91,6 +91,22 @@ export class GtfsService {
     if (!this._agencies.hasOwnProperty(feedIndex)) {
       // Initialize Agency
       this._agencies[feedIndex] = await this.agencyRepository.findOne({ feedIndex });
+    }
+
+    const { agencyId } = this._agencies[feedIndex];
+
+    // Initialize configuration
+    if (!this._config.hasOwnProperty(feedIndex)) {
+      this._config[feedIndex] = GTFSConfig.find((config: any) =>
+        config.feedIndex === feedIndex
+        && config.agencyId === agencyId)
+    }
+
+    const { proto } = this._config[feedIndex];
+    if (!this._extendsProto && proto) {
+      // Store and attempt to use extension of gtfs-realtime.proto
+      // NOTE: This may be removed if deemed not-useful-enough.
+      this._extendsProto = proto && await import(`../../proto/${proto}`);
     }
 
     if (!this._stationsData.hasOwnProperty(feedIndex)) {
@@ -156,18 +172,9 @@ export class GtfsService {
   // Update GTFS realtime data
   private async _update(feedIndex: number) {
     await this._initialize(feedIndex);
+    const { feedUrls, accessKey } =  this._config[feedIndex];
 
-    const { agencyTimezone: TZ, agencyId } = this._agencies[feedIndex];
-    const config = GTFSConfig[feedIndex][agencyId];
-    const { feedUrls, proto } = config;
-
-    if (!this._extendsProto && proto) {
-      // Store and attempt to use extension of gtfs-realtime.proto
-      // NOTE: This may be removed if deemed not-useful-enough.
-      this._extendsProto = proto && await import(`../../proto/${proto}`);
-    }
-
-    const { GTFS_REALTIME_ACCESS_KEY } = process.env;
+    const GTFS_REALTIME_ACCESS_KEY = process.env[accessKey];
     const options = {
       method: 'GET',
       headers: {
