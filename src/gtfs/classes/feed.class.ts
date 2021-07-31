@@ -162,6 +162,7 @@ export class Feed {
                 station.addTrain({
                   routeId,
                   tripId,
+                  stopId: stop.stopId,
                   trainTime: stopTime,
                   feedTime: this.lastUpdated,
                 });

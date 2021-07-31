@@ -23,7 +23,15 @@ const gtfsRealtime = [
       'S': 'GS',
       'SS': 'FS',
     },
+    // Name of access key to load from .env
     accessKey: 'GTFS_REALTIME_ACCESS_KEY',
+    // Service alerts associated with this feed:
+    serviceAlertUrls: [
+      'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/camsys%2Fsubway-alerts',
+      // JSON:
+      // https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/camsys%2Fsubway-alerts.json
+    ],
+    serviceAlertProto: 'gtfs-realtime-service-status',
   },
 ];
 
