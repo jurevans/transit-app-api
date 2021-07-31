@@ -11,7 +11,6 @@ import { getDistance } from 'src/util';
 @Injectable()
 export class GtfsService {
   private _feeds: any;
-  private _initializedFeeds: any;
 
   constructor(
     @InjectRepository(Agency)
@@ -22,14 +21,12 @@ export class GtfsService {
     private stopsRepository: Repository<Stops>,
   ) {
     this._feeds = {};
-    this._initializedFeeds = {};
   }
 
   private async _getFeed(feedIndex: number) {
-    if (!this._initializedFeeds[feedIndex]) {
+    if (!this._feeds[feedIndex]) {
       const feed = await this._initializeFeed(feedIndex);
       this._feeds[feedIndex] = feed;
-      this._initializedFeeds[feedIndex] = true;
     }
     return this._feeds[feedIndex];
   }
