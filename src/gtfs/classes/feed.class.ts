@@ -146,7 +146,7 @@ export class Feed {
       entities.forEach((entity: any) => {
         if (entity.tripUpdate) {
           const { trip, stopTimeUpdate } = entity.tripUpdate;
-          const { routeId } = trip;
+          const { routeId, tripId } = trip;
 
           stopTimeUpdate.forEach((stop: any) => {
             const stopTime = stop.arrival?.time;
@@ -161,6 +161,7 @@ export class Feed {
               if (station) {
                 station.addTrain({
                   routeId,
+                  tripId,
                   trainTime: stopTime,
                   feedTime: this.lastUpdated,
                 });

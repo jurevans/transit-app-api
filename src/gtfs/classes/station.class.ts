@@ -13,16 +13,17 @@ export class Station {
 
   public addTrain(props: {
     routeId: string,
-    direction: string,
     trainTime: number,
     feedTime: number,
+    tripId: string,
   }): void {
-    const { routeId, trainTime, feedTime } = props;
+    const { routeId, trainTime, tripId, feedTime } = props;
     if (this.routes.indexOf(routeId) < 0)
       this.routes.push(routeId);
     this.trains.push({
       route: routeId,
       time: trainTime,
+      tripId,
     });
     this.lastUpdate = feedTime;
   }
