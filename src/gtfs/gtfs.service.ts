@@ -1,100 +1,129 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { DateTime } from 'luxon';
-import fetch from 'node-fetch';
-import GTFSConfig from '../../config/gtfsRealtime';
+import { Repository, IsNull, Not } from 'typeorm';
 import { Agency } from 'src/entities/agency.entity';
-import * as GTFS from 'proto/gtfs-realtime';
+import { Routes } from 'src/entities/routes.entity';
+import { Stops } from 'src/entities/stops.entity';
+import { Feed } from './classes/feed.class';
+import { Station } from './classes/station.class';
+import { getDistance } from 'src/util';
 
 @Injectable()
 export class GtfsService {
-  private _agency: Agency;
-  private _data: any[];
-  private _lastUpdated: number;
-  private _EXPIRES: number;
-  private _extendsProto: any;
+  private _feeds: any;
 
   constructor(
     @InjectRepository(Agency)
     private agencyRepository: Repository<Agency>,
+    @InjectRepository(Routes)
+    private routesRepository: Repository<Routes>,
+    @InjectRepository(Stops)
+    private stopsRepository: Repository<Stops>,
   ) {
-    this._data = [];
-    this._EXPIRES = 60;
+    this._feeds = {};
   }
 
-  private _checkExpires() {
-    return !this._lastUpdated
-      || (DateTime.now().toSeconds() - this._lastUpdated > this._EXPIRES);
-  }
-
-  private async _update(feedIndex: number) {
-    if (!this._agency) {
-      this._agency = await this.agencyRepository.findOne({ feedIndex });
+  private async _getFeed(feedIndex: number) {
+    if (!this._feeds[feedIndex]) {
+      const feed = await this._initializeFeed(feedIndex);
+      this._feeds[feedIndex] = feed;
     }
-
-    // Store results locally so that uncached endpoints don't retigger fetch
-    // until this._EXPIRES has passed:
-    if (this._checkExpires()) {
-      const { agencyTimezone: TZ, agencyId } = this._agency;
-      const config = GTFSConfig[agencyId];
-      const { feedUrls, proto } = config;
-
-      if (!this._extendsProto && proto) {
-        // Store and attempt to use extension of gtfs-realtime.proto
-        // NOTE: This may be removed if deemed not-useful-enough.
-        this._extendsProto = proto && await import(`../../proto/${proto}`);
-        console.log(`Imported module ${proto}`)
-      }
-
-      const { GTFS_REALTIME_ACCESS_KEY } = process.env;
-      const options = {
-        method: 'GET',
-        headers: {
-          'x-api-key': GTFS_REALTIME_ACCESS_KEY,
-        },
-      };
-
-      const results = feedUrls.map(async (endpoint: string) => {
-        const response = await fetch(endpoint, options);
-        const body = await response.buffer();
-        const feed = GTFS.FeedMessage.decode(body);
-        const updated = DateTime.now().setZone(TZ).toISO();
-
-        return {
-          data: GTFS.FeedMessage.toJSON(feed),
-          updated,
-        }
-      });
-
-      this._lastUpdated = DateTime.now().toSeconds();
-      this._data = await Promise.all(results);
-    }
+    return this._feeds[feedIndex];
   }
 
-  // Return everything in feed. This is for testing, and is not a practical endpoint:
-  async find(props: { feedIndex: number }) {
+  private async _getStops(feedIndex: number, isParent: boolean): Promise<Stops[]> {
+    const stops = await this.stopsRepository.find({
+      where: {
+        feedIndex,
+        parentStation: isParent ? IsNull() : Not(IsNull()),
+      },
+    });
+    return stops;
+  }
+
+  private async _initializeFeed(feedIndex: number) {
+    const agency = await this.agencyRepository.findOne({ feedIndex });
+    const feed = new Feed(agency);
+    const stations = await this._getStops(feedIndex, true);
+    const stops = await this._getStops(feedIndex, false);
+    feed.initializeStations(stations, stops);
+
+    const routeIdsResults = await this.routesRepository.find({
+      select: [ 'routeId'],
+      where: { feedIndex },
+    });
+    feed.initializeRoutes(routeIdsResults.map((result: any) => result.routeId));
+
+    return feed;
+  }
+
+  // Return everything in the raw feed.
+  // This is for testing, and is not a practical endpoint:
+  public async find(props: { feedIndex: number }) {
     const { feedIndex } = props;
-    await this._update(feedIndex);
-    return this._data;
+    const feed = await this._getFeed(feedIndex);
+    await feed.update();
+
+    return {
+      data: feed.data,
+      updated: feed.lastUpdated,
+    };
   }
 
-  async findByLocation(props: { feedIndex: number, lon: number, lat: number }) {
+  public async findByLocation(props: { feedIndex: number, lon: number, lat: number }) {
     const { feedIndex, lon, lat } = props;
-    await this._update(feedIndex);
-    return [];
+    const LIMIT = 5;
+    const feed = await this._getFeed(feedIndex);
+    await feed.update();
+
+    const sortableStations = Object.values(feed.stations);
+    const stations = sortableStations.map((station: Station) => station.serialize());
+
+    stations.sort((a: any, b: any) => {
+      const dist1 = getDistance([lon, lat], a.location);
+      const dist2 = getDistance([lon, lat], b.location);
+      return dist1 - dist2;
+    });
+
+    return {
+      data: stations.slice(0, LIMIT),
+      updated: feed.lastUpdated,
+    }
   }
 
-  async findByRouteId(props: { feedIndex: number, routeId: string }) {
+  public async findByRouteId(props: { feedIndex: number, routeId: string }) {
     const { feedIndex, routeId } = props;
-    await this._update(feedIndex);
-    return [];
+    const useRouteId = routeId.toUpperCase();
+    const feed = await this._getFeed(feedIndex);
+    await feed.update();
+
+    const stopsForRoute = feed.routes[useRouteId];
+    const stations = {};
+
+    stopsForRoute.forEach((stopId: string) => {
+      const stationId = feed.stopsIndex[stopId];
+      const station = feed.stations[stationId];
+      if (!stations[stationId] && station) {
+        stations[stationId] = station.serialize();
+      }
+    });
+
+    return {
+      data: stations,
+      updated: feed.lastUpdated,
+    };
   }
 
-  async findByIds(props: { feedIndex: number, stationIdString: string }) {
+  public async findByIds(props: { feedIndex: number, stationIdString: string }) {
     const { feedIndex, stationIdString } = props;
     const stationIds = stationIdString.split(',');
-    await this._update(feedIndex);
-    return [];
+    const feed = await this._getFeed(feedIndex);
+    await feed.update();
+
+    return {
+      data: stationIds.map((stationId: string) =>
+        feed.stations[stationId].serialize()),
+      updated: feed.lastUpdated,
+    };
   }
 }

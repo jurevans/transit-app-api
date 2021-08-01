@@ -1,8 +1,10 @@
 /**
- * Configure API endpoints, keyed by agencyId
+ * Configure API endpoints, keyed by feedIndex, agencyId
  */
-const gtfsRealtime = {
-  'MTA NYCT': {
+const gtfsRealtime = [
+  {
+    feedIndex: 1,
+    agencyId: 'MTA NYCT',
     feedUrls: [
       'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs',       // 1,2,3,4,5,6,S
       'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-ace',   // A,C,E
@@ -14,7 +16,23 @@ const gtfsRealtime = {
       'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-si',    // SIR
     ],
     proto: 'nyct-subway',
-  }
-};
+    // Specify any differences between static and RT routeIds here:
+    // Key = GTFS Realtime Route ID, Value = GTFS Static Route ID
+    routeIdOverrides: {
+      'SIR': 'SI',
+      'S': 'GS',
+      'SS': 'FS',
+    },
+    // Name of access key to load from .env
+    accessKey: 'GTFS_REALTIME_ACCESS_KEY',
+    // Service alerts associated with this feed:
+    serviceAlertUrls: [
+      'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/camsys%2Fsubway-alerts',
+      // JSON:
+      // https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/camsys%2Fsubway-alerts.json
+    ],
+    serviceAlertProto: 'gtfs-realtime-service-status',
+  },
+];
 
 export default gtfsRealtime;

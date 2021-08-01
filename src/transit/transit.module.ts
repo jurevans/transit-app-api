@@ -12,21 +12,26 @@ import { Routes } from 'src/entities/routes.entity';
 import { Trips } from 'src/entities/trips.entity';
 import { Agency } from 'src/entities/agency.entity';
 import { FeedInfo } from 'src/entities/feedInfo.entity';
+import { Stops } from 'src/entities/stops.entity';
+import { StopsService } from './stops/stops.service';
+import { StopsController } from './stops/stops.controller';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Agency, Routes, Trips, FeedInfo])],
+  imports: [TypeOrmModule.forFeature([Agency, Routes, Trips, FeedInfo, Stops])],
   exports: [TypeOrmModule],
   providers: [
     AgencyService,
     RoutesService,
     LocationService,
     FeedService,
+    StopsService,
   ],
   controllers: [
     AgencyController,
     RoutesController,
     LocationController,
     FeedController,
+    StopsController,
   ],
 })
 export class TransitModule {}

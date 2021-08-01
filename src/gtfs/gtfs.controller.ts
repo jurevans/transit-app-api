@@ -24,6 +24,7 @@ export class GtfsController {
    * @param lat
    */
   @Get(':feedIndex/location')
+  @CacheTTL(60)
   async findByLocation(
     @Param('feedIndex') feedIndex: number,
     @Query('lon') lon: number,
@@ -37,7 +38,7 @@ export class GtfsController {
    * @param feedIndex
    * @param routeId
    */
-  @Get(':feedIndex/stationsByRoute/:routeId')
+  @Get(':feedIndex/route/:routeId')
   async findByRouteId(
     @Param('feedIndex') feedIndex: number,
     @Param('routeId') routeId: string,
@@ -50,6 +51,7 @@ export class GtfsController {
    * @param feedIndex
    * @param stationIds
    */
+  @CacheTTL(10)
   @Get(':feedIndex/stations/:stationIds')
   async findByIds(
     @Param('feedIndex') feedIndex: number,
