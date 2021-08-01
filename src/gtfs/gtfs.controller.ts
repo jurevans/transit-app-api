@@ -51,6 +51,7 @@ export class GtfsController {
    * @param feedIndex
    * @param stationIds
    */
+  @CacheTTL(10)
   @Get(':feedIndex/stations/:stationIds')
   async findByIds(
     @Param('feedIndex') feedIndex: number,

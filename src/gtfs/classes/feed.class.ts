@@ -34,7 +34,7 @@ export class Feed {
     this.stations = {};
 
     this._MAX_MINUTES = 30;
-    this._EXPIRES = 60;
+    this._EXPIRES = 30;
   }
 
   private _isExpired() {
