@@ -8,10 +8,10 @@ export class AgencyController {
 
   @Get(':feedIndex/id/:agencyId')
   @CacheTTL(86400)
-  async findAll(
+  async findOne(
     @Param('feedIndex') feedIndex: number,
     @Param('agencyId') agencyId: string,
   ): Promise<Agency> {
-    return this.agencyService.findOne({ feedIndex, agencyId });
+    return await this.agencyService.findOne({ feedIndex, agencyId });
   }
 }

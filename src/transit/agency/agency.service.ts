@@ -12,6 +12,6 @@ export class AgencyService {
 
   findOne(props: { feedIndex: number, agencyId: string }) {
     const { feedIndex, agencyId } = props;
-    return this.agencyRepository.findOneOrFail({ feedIndex, agencyId });
+    return this.agencyRepository.findOne({ feedIndex, agencyId });
   }
 }

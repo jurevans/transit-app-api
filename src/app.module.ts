@@ -10,6 +10,8 @@ import { TransitModule } from './transit/transit.module';
 
 import ormconfig from '../ormconfig';
 import { APP_INTERCEPTOR } from '@nestjs/core';
+import { HealthController } from './health/health.controller';
+import { TerminusModule } from '@nestjs/terminus';
 
 TypeOrmModule.forRootAsync({
   useFactory: async () =>
@@ -27,9 +29,11 @@ TypeOrmModule.forRootAsync({
     GtfsModule,
     GeoModule,
     TransitModule,
+    TerminusModule,
   ],
   controllers: [
     AppController,
+    HealthController,
   ],
   providers: [
     {

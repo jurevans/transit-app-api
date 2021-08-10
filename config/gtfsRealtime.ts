@@ -15,6 +15,46 @@ const gtfsRealtime = [
       'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-l',     // L
       'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-si',    // SIR
     ],
+    // Test config, to allow requests for specific routes, as an alternative
+    // to the above. Note: It isn't a requirement that endpoints are grouped
+    // like this, other transit agencies or services may provide only a single
+    // endpoint, so the above config should still be valid!
+    feedUrls2: [
+      {
+        routes: ['1', '2', '3', '4', '5', '6', 'GS'],
+        url: 'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs',
+      },
+      {
+        type: 'route',
+        routes: ['A', 'C', 'E'],
+        url: 'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-ace',
+      },
+      {
+        type: 'route',
+        routes: ['B', 'D', 'F', 'M'],
+        url: 'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-bdfm',
+      },
+      {
+        routes: ['G'],
+        url: 'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-g',
+      },
+      {
+        routes: ['J', 'Z'],
+        url: 'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-jz',
+      },
+      {
+        routes: ['N', 'Q', 'R', 'W'],
+        url: 'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-nqrw',
+      },
+      {
+        routes: ['L'],
+        url: 'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-l',
+      },
+      {
+        routes: ['SI'],
+        url: 'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-si',
+      },
+    ],
     proto: 'nyct-subway',
     // Specify any differences between static and RT routeIds here:
     // Key = GTFS Realtime Route ID, Value = GTFS Static Route ID

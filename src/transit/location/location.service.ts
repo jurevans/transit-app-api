@@ -14,7 +14,7 @@ export class LocationService {
             WHERE s.feed_index = ${feedIndex}
           ) AS geom
       )
-      SELECT ST_X(center) longitude, ST_Y(center) latitude from centroid;
+      SELECT ST_X(center) longitude, ST_Y(center) latitude FROM centroid;
     `);
 
     if (locationResults.length > 0) {
