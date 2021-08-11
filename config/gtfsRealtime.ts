@@ -43,9 +43,13 @@ const gtfsRealtime = [
     // Specify any differences between static and RT routeIds here:
     // Key = GTFS Realtime Route ID, Value = GTFS Static Route ID
     routeIdOverrides: {
+      // routeShortName -> routeId
       'SIR': 'SI',
       'S': 'GS',
       'SS': 'FS',
+    },
+    routeTypeOverrides: {
+      '1': 'Subway',
     },
     // Name of access key to load from .env
     accessKey: 'GTFS_REALTIME_ACCESS_KEY',
