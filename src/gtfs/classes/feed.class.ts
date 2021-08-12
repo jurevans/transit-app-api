@@ -113,7 +113,7 @@ export class Feed {
     }, {});
   }
 
-  public async update() {
+  public async update(routeIds: string[] = []) {
     if (!this._isExpired()) {
       return;
     }
@@ -131,7 +131,23 @@ export class Feed {
       },
     };
 
-    const results = feedUrls.map(async (endpoint: string): Promise<any> => {
+    // Filter by routeId if provided, otherwise, return all endpoint URLs:
+    const urls = feedUrls
+      .filter((endpoint: any) => {
+        if (routeIds.length > 0
+            && endpoint.hasOwnProperty('routes')) {
+          return endpoint.routes.some((route: string) => routeIds.indexOf(route) > -1);
+        }
+        return true;
+      })
+      .map((endpoint: any) => {
+        if (endpoint.hasOwnProperty('url')) {
+          return endpoint.url;
+        }
+        return endpoint;
+      });
+
+    const results = urls.map(async (endpoint: string): Promise<any> => {
       const response = await fetch(endpoint, options);
       const body = await response.buffer();
       const feed = GTFS.FeedMessage.decode(body);
