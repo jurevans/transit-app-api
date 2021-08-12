@@ -17,6 +17,15 @@ npm run start:dev
 
 Api is available at `http://localhost:5000/api/v1/`. Swagger documentation is enabled at `http://localhost:5000/api/v1/docs/`, though this is presently minimal while the api is being hashed out. The appropriate decorators from `@nestjs/swagger` will be implemented once this becomes stable.
 
+## Connect to Redis
+This application uses Redis for caching and session management, which can be configured in `.env`:
+
+```bash
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_AUTH=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+```
+
 ## Connect to a database
 Example `.env` configuration:
 

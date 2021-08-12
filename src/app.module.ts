@@ -4,6 +4,7 @@ import { APP_INTERCEPTOR } from '@nestjs/core';
 import { TerminusModule } from '@nestjs/terminus';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Connection, getConnectionOptions } from 'typeorm';
+import * as redisStore from 'cache-manager-redis-store';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { GtfsModule } from './gtfs/gtfs.module';
@@ -25,7 +26,13 @@ TypeOrmModule.forRootAsync({
 @Module({
   imports: [
     ConfigModule.forRoot(),
-    CacheModule.register({ ttl: 30 }),
+    CacheModule.register({
+      store: redisStore,
+      host: process.env.REDIS_HOST,
+      port: process.env.REDIS_PORT,
+      password: process.env.REDIS_AUTH,
+      ttl: 30,
+    }),
     TypeOrmModule.forRoot(),
     GtfsModule,
     GeoModule,
