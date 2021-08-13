@@ -13,6 +13,7 @@ import { TransitModule } from './transit/transit.module';
 import { HealthController } from './health/health.controller';
 import { AuthMiddleware } from './middleware/auth.middleware';
 import { AuthModule } from './auth/auth.module';
+import { RealtimeModule } from './realtime/realtime.module';
 import ormconfig from '../ormconfig';
 
 TypeOrmModule.forRootAsync({
@@ -39,6 +40,7 @@ TypeOrmModule.forRootAsync({
     TransitModule,
     TerminusModule,
     AuthModule,
+    RealtimeModule,
   ],
   controllers: [
     AppController,
