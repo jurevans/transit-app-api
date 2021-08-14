@@ -1,5 +1,5 @@
 import { CACHE_MANAGER, Inject, Injectable } from '@nestjs/common';
-import { Repository, IsNull, Not } from 'typeorm';
+import { Repository, IsNull, getManager } from 'typeorm';
 import { Stops } from 'src/entities/stops.entity';
 import { Transfers } from 'src/entities/transfers.entity';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -10,7 +10,7 @@ const STOPS_PREFIX = 'stops';
 const TRANSFERS_PREFIX = 'transfers';
 
 type IndexedStops = {
-  [key: string]: string;
+  [key: string]: any;
 };
 
 type IndexedStations = {
@@ -33,23 +33,35 @@ export class StationsService {
   ) {}
 
   public async getStops(feedIndex: number) {
-    const key = `${STOPS_PREFIX}-${feedIndex}`;
+    const key = `/${STOPS_PREFIX}/${feedIndex}`;
     const stopsFromCache = await this.cacheManager.get(key);
 
     if (stopsFromCache) {
       return stopsFromCache;
     }
+    const manager = getManager();
 
-    const stops = await this.stopsRepository.find({
-      select: ['stopId', 'parentStation'],
-      where: {
-        feedIndex,
-        parentStation: Not(IsNull()),
-      },
-    });
+    const stops = await manager.query(`
+      SELECT
+        DISTINCT ON (s.stop_id) s.stop_id AS "stopId",
+        s.parent_station AS "parentStation",
+        t.trip_headsign AS "headsign",
+        t.trip_id AS "tripId",
+        t.route_id AS "routeId",
+        t.direction_id,
+        EXTRACT(epoch FROM st.arrival_time) AS "time"
+      FROM stops s
+      INNER JOIN
+      stop_times st
+      ON st.stop_id = s.stop_id
+      LEFT JOIN
+      trips t
+      ON t.trip_id = st.trip_id
+      WHERE s.feed_index = ${feedIndex}`
+    );
 
     const indexedStops: IndexedStops = stops.reduce((indexed: IndexedStops, stop: Stops) => {
-      indexed[stop.stopId] = stop.parentStation;
+      indexed[stop.stopId] = stop;
       return indexed;
     }, {});
 
@@ -58,7 +70,7 @@ export class StationsService {
   }
 
   public async getStations(feedIndex: number) {
-    const key = `${STATIONS_PREFIX}-${feedIndex}`;
+    const key = `/${STATIONS_PREFIX}/${feedIndex}`;
     const stationsFromCache = await this.cacheManager.get(key);
 
     if (stationsFromCache) {
@@ -83,7 +95,7 @@ export class StationsService {
   }
 
   public async getTransfers(feedIndex: number) {
-    const key = `${TRANSFERS_PREFIX}-${feedIndex}`;
+    const key = `/${TRANSFERS_PREFIX}/${feedIndex}`;
     const transfersFromCache = await this.cacheManager.get(key);
 
     if (transfersFromCache) {

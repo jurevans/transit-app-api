@@ -7,7 +7,6 @@ import { Station } from './station.class';
  * Class to store Feed instance
  */
 export class Feed {
-  public routes;
   public stations;
   public stopsIndex;
   public lastUpdated: number;
@@ -42,16 +41,6 @@ export class Feed {
     if (!this._extendsProto && proto) {
       this._extendsProto = await import(`../../../proto/${proto}`);
     }
-  }
-
-  // Check for override config to translate routeId if needed:
-  private _checkRouteIdOverride(routeId: string) {
-    const config = this._config;
-    if (!config.hasOwnProperty('routeIdOverrides')) {
-      return routeId;
-    }
-    const override = config.routeIdOverrides[routeId];
-    return override ? override : routeId;
   }
 
   // Provide a mapping of stop to parent station:
@@ -99,13 +88,6 @@ export class Feed {
       // Initialize stops to parent station index
       this.stopsIndex = this._indexStops(this._stationsData);
     }
-  }
-
-  public initializeRoutes(routeIds: string[] = []) {
-    this.routes = routeIds.reduce((routes: any, routeId: any) => {
-      routes[routeId] = [];
-      return routes;
-    }, {});
   }
 
   public async update(routeIds: string[] = []) {
@@ -177,9 +159,6 @@ export class Feed {
                   feedTime: this.lastUpdated,
                 });
               }
-
-              const useRouteId = this._checkRouteIdOverride(routeId);
-              this.routes[useRouteId].push(stop.stopId);
             }
           });
         }

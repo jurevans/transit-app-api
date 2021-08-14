@@ -50,12 +50,6 @@ export class GtfsService {
     const stops = await this._getStops(feedIndex, false);
     feed.initializeStations(stations, stops);
 
-    const routeIdsResults = await this.routesRepository.find({
-      select: [ 'routeId'],
-      where: { feedIndex },
-    });
-    feed.initializeRoutes(routeIdsResults.map((result: any) => result.routeId));
-
     return feed;
   }
 

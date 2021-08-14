@@ -1,4 +1,10 @@
-import { ConnectedSocket, MessageBody, SubscribeMessage, WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
+import {
+  ConnectedSocket,
+  MessageBody,
+  SubscribeMessage,
+  WebSocketGateway,
+  WebSocketServer,
+} from '@nestjs/websockets';
 import { Logger } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
 import { RealtimeService } from './realtime.service';
@@ -23,11 +29,11 @@ export class RealtimeGateway {
   ) {
     const { stationId, feedIndex } = data;
     this.logger.log('Data', data);
-    const stops = await this.stationsService.getStops(feedIndex);
-    const stations = await this.stationsService.getStations(feedIndex);
+
     const transfers = await this.stationsService.getTransfers(feedIndex);
     const stationIds = transfers[stationId] || [stationId];
-    const results = await this.realtimeService.findByStationId({ feedIndex, stationIds });
-    socket.emit('recieved_trip_updates', results);
+
+    const tripUpdates = await this.realtimeService.getTripUpdates({ feedIndex, stationIds });
+    socket.emit('recieved_trip_updates', tripUpdates);
   }
 }
