@@ -7,9 +7,11 @@ import { RealtimeGateway } from './realtime.gateway';
 import { RealtimeService } from './realtime.service';
 import { StationsService } from './stations/stations.service';
 import * as redisStore from 'cache-manager-redis-store';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
+    ScheduleModule.forRoot(),
     TypeOrmModule.forFeature([Stops, Transfers]), 
     CacheModule.registerAsync({
       useFactory: (configService: ConfigService): CacheModuleOptions => ({
