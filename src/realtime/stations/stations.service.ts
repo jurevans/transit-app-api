@@ -1,12 +1,11 @@
 import { CACHE_MANAGER, Inject, Injectable } from '@nestjs/common';
-import { Repository, IsNull, getManager } from 'typeorm';
+import { Repository, getManager } from 'typeorm';
 import { Stops } from 'src/entities/stops.entity';
 import { Transfers } from 'src/entities/transfers.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Cache } from 'cache-manager';
 import { getCurrentDay } from 'src/util';
 
-const STATIONS_PREFIX = 'stations';
 const STOPS_PREFIX = 'stops';
 const TRANSFERS_PREFIX = 'transfers';
 
@@ -14,19 +13,13 @@ type IndexedStops = {
   [key: string]: any;
 };
 
-type IndexedStations = {
-  [key: string]: Stops;
-}
-
 type IndexedTransfers = {
   [key: string]: string[];
-}
+};
 
 @Injectable()
 export class StationsService {
   constructor(
-    @InjectRepository(Stops)
-    private readonly stopsRepository: Repository<Stops>,
     @InjectRepository(Transfers)
     private readonly transfersRepository: Repository<Transfers>,
     @Inject(CACHE_MANAGER)
@@ -49,7 +42,7 @@ export class StationsService {
         t.trip_headsign AS "headsign",
         t.trip_id AS "tripId",
         t.route_id AS "routeId",
-        t.direction_id,
+        t.direction_id AS "directionId",
         EXTRACT(epoch FROM st.arrival_time) AS "time"
       FROM stops s
       INNER JOIN stop_times st
@@ -68,31 +61,6 @@ export class StationsService {
     }, {});
 
     await this.cacheManager.set(key, indexedStops, { ttl: 86400 });
-    return this.cacheManager.get(key);
-  }
-
-  public async getStations(feedIndex: number) {
-    const key = `/${STATIONS_PREFIX}/${feedIndex}`;
-    const stationsFromCache = await this.cacheManager.get(key);
-
-    if (stationsFromCache) {
-      return stationsFromCache;
-    }
-
-    const stations = await this.stopsRepository.find({
-      select: ['stopId', 'stopName'],
-      where: {
-        feedIndex,
-        parentStation: IsNull(),
-      },
-    });
-
-    const indexedStations: IndexedStations = stations.reduce((indexed: IndexedStations, station: Stops) => {
-      indexed[station.stopId] = station;
-      return indexed;
-    }, {});
-
-    await this.cacheManager.set(key, indexedStations, { ttl: 0 });
     return this.cacheManager.get(key);
   }
 

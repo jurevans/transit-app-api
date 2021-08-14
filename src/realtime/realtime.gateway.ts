@@ -63,6 +63,6 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
   }
 
   handleConnection() {
-    this.logger.log(`${RealtimeGateway.name} WebSocket connected!`);
+    this.logger.log('Socket connected!');
   }
 }
