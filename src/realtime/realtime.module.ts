@@ -17,7 +17,7 @@ import { ScheduleModule } from '@nestjs/schedule';
       useFactory: (configService: ConfigService): CacheModuleOptions => ({
         store: redisStore,
         ...configService.get('redis'),
-        ttl: 0,
+        ttl: 30,
       }),
       inject: [ConfigService]
     }),

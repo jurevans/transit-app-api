@@ -33,14 +33,17 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
   ) {
     const { stationId, feedIndex } = data;
     //this.logger.log('Data', data);
-
     const transfers = await this.stationsService.getTransfers(feedIndex);
     const stationIds = transfers[stationId] || [stationId];
     this.schedulerRegistry.getIntervals().forEach((interval: any) => console.log('INTERVAL', interval));
     this.addInterval('gtfs-realtime-updates', 30000, async () => {
       this.logger.log(`${RealtimeGateway.name} sending new trip updates!`);
       const tripUpdates = await this.realtimeService.getTripUpdates({ feedIndex, stationIds });
-      socket.emit('recieved_trip_updates', tripUpdates);
+      socket.emit('recieved_trip_updates', {
+        stationId,
+        transfers: stationIds,
+        ...tripUpdates,
+      });
     });
   }
 

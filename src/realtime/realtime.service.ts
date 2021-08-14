@@ -7,7 +7,7 @@ import { StationsService } from './stations/stations.service';
 import * as GTFS from 'proto/gtfs-realtime';
 
 const VEHICLE_PREFIX = 'vehicles';
-const MAX_MINUTES = 30;
+const MAX_MINUTES = 60;
 
 @Injectable()
 export class RealtimeService {
@@ -77,9 +77,25 @@ export class RealtimeService {
     return feedMessage.entity.filter((entity: any) => entity.hasOwnProperty('tripUpdate'));
   }
 
-  private async _getStopTimeUpdates(entities: any[], stopIds: string[]) {
+  private static _collectRouteIds(stopTimeUpdates: any) {
+    const routeIds = [];
+    stopTimeUpdates.forEach((update: any) => {
+      const { routeId } = update;
+      if (routeIds.indexOf(routeId) < 0) {
+        routeIds.push(routeId);
+      }
+    });
+    return routeIds.sort();
+  }
+
+  private async _getStopTimeUpdates(props: {
+    feedIndex: number,
+    entities: any[],
+    stopIds: string[],
+  }) {
+    const { feedIndex, entities, stopIds } = props;
     const now = DateTime.now().toSeconds();
-    const vehicles = {};
+    const vehicles = [];
     const key = `/${VEHICLE_PREFIX}/${stopIds.join(',')}`;
     const vehiclesInCache = await this.cacheManager.get(key);
 
@@ -87,8 +103,11 @@ export class RealtimeService {
       return vehiclesInCache;
     }
 
+    const indexedStops = await this.stationsService.getStops(feedIndex);
+
     entities.forEach((entity: any) => {
       const { stopTimeUpdate, trip } = entity.tripUpdate;
+      const { routeId, tripId } = trip;
       stopTimeUpdate.forEach((update: any) => {
         if (!update.arrival) {
           return;
@@ -96,20 +115,23 @@ export class RealtimeService {
         const { stopId, arrival } = update;
         const { time, delay } = arrival;
         if (stopIds.indexOf(update.stopId) > -1
-          && time > now - (MAX_MINUTES * 60)) {
-          if (!vehicles[stopId]) {
-            vehicles[stopId] = [];
-          }
-          vehicles[stopId].push({
+          && time > (now - 60)
+          && time < (now + (MAX_MINUTES * 60))) {
+
+          const { headsign } = indexedStops[stopId];
+          vehicles.push({
             stopId,
             time,
             delay,
-            routeId: trip.routeId,
-            tripId: trip.tripId,
+            routeId,
+            tripId,
+            headsign,
           });
         }
       });
     });
+
+    vehicles.sort((a: any, b: any) => (a.time < b.time) ? -1 : 1);
     await this.cacheManager.set(key, vehicles, { ttl: 30 });
     return await this.cacheManager.get(key);
   }
@@ -161,11 +183,16 @@ export class RealtimeService {
       }
     }, []);
 
-    const stopTimeUpdates = await this._getStopTimeUpdates(
+    const stopTimeUpdates = await this._getStopTimeUpdates({
+      feedIndex,
       entities,
       stopIds,
-    );
+    });
 
-    return stopTimeUpdates;
+    const routeIdsFromStops = RealtimeService._collectRouteIds(stopTimeUpdates);
+    return {
+      routeIds: routeIdsFromStops,
+      stopTimeUpdates,
+    };
   }
 }

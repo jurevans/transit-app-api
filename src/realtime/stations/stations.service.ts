@@ -4,6 +4,7 @@ import { Stops } from 'src/entities/stops.entity';
 import { Transfers } from 'src/entities/transfers.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Cache } from 'cache-manager';
+import { getCurrentDay } from 'src/util';
 
 const STATIONS_PREFIX = 'stations';
 const STOPS_PREFIX = 'stops';
@@ -35,12 +36,12 @@ export class StationsService {
   public async getStops(feedIndex: number) {
     const key = `/${STOPS_PREFIX}/${feedIndex}`;
     const stopsFromCache = await this.cacheManager.get(key);
+    const today = getCurrentDay();
 
     if (stopsFromCache) {
       return stopsFromCache;
     }
     const manager = getManager();
-
     const stops = await manager.query(`
       SELECT
         DISTINCT ON (s.stop_id) s.stop_id AS "stopId",
@@ -51,13 +52,14 @@ export class StationsService {
         t.direction_id,
         EXTRACT(epoch FROM st.arrival_time) AS "time"
       FROM stops s
-      INNER JOIN
-      stop_times st
+      INNER JOIN stop_times st
       ON st.stop_id = s.stop_id
-      LEFT JOIN
-      trips t
+      INNER JOIN trips t
       ON t.trip_id = st.trip_id
-      WHERE s.feed_index = ${feedIndex}`
+      INNER JOIN calendar cal
+      ON cal.service_id = t.service_id
+      WHERE s.feed_index = ${feedIndex}
+        AND cal.${today} = 1`
     );
 
     const indexedStops: IndexedStops = stops.reduce((indexed: IndexedStops, stop: Stops) => {
@@ -65,7 +67,7 @@ export class StationsService {
       return indexed;
     }, {});
 
-    await this.cacheManager.set(key, indexedStops, { ttl: 0 });
+    await this.cacheManager.set(key, indexedStops, { ttl: 86400 });
     return this.cacheManager.get(key);
   }
 
