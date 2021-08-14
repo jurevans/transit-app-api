@@ -12,7 +12,7 @@ export class GeoController {
     private stopsService: StopsService) {}
 
   @Get(':feedIndex/shapes')
-  @CacheTTL(3600)
+  @CacheTTL(86400)
   findShapes(
     @Param('feedIndex') feedIndex: number,
     @Query('day') day?: string,
@@ -34,7 +34,7 @@ export class GeoController {
   }
 
   @Get(':feedIndex/stops')
-  @CacheTTL(3600)
+  @CacheTTL(86400)
   async findAll(
     @Param('feedIndex') feedIndex: number,
     @Query('day') day?: string,

@@ -1,7 +1,5 @@
 import * as GTFS from 'proto/gtfs-realtime';
-import { Agency } from 'src/entities/agency.entity';
 import { Stops } from 'src/entities/stops.entity';
-import GTFSConfig from '../../../config/gtfsRealtime';
 import fetch from 'node-fetch';
 import { DateTime } from 'luxon';
 import { Station } from './station.class';
@@ -9,7 +7,6 @@ import { Station } from './station.class';
  * Class to store Feed instance
  */
 export class Feed {
-  public agency;
   public routes;
   public stations;
   public stopsIndex;
@@ -22,19 +19,17 @@ export class Feed {
 
   private _MAX_MINUTES: number;
   private _EXPIRES: number;
+  private _ACCESS_KEY: string;
 
-  constructor (agency: Agency) {
-    this.agency = agency;
-    this._config = GTFSConfig.find((config: any) =>
-      config.feedIndex === agency.feedIndex
-      && config.agencyId === agency.agencyId);
-
+  constructor (config: any, accessKey: string) {
+    this._config = config;
     this._stationsData = {};
     this._getExtendsProto();
     this.stations = {};
 
     this._MAX_MINUTES = 30;
     this._EXPIRES = 30;
+    this._ACCESS_KEY = accessKey;
   }
 
   private _isExpired() {
@@ -122,12 +117,11 @@ export class Feed {
       this.stations[id].clearTrainData();
     }
 
-    const { feedUrls, accessKey } =  this._config;
-    const GTFS_REALTIME_ACCESS_KEY = process.env[accessKey];
+    const { feedUrls } =  this._config;
     const options = {
       method: 'GET',
       headers: {
-        'x-api-key': GTFS_REALTIME_ACCESS_KEY,
+        'x-api-key': this._ACCESS_KEY,
       },
     };
 

@@ -1,8 +1,8 @@
-import { CacheInterceptor, CacheModule, MiddlewareConsumer, Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { CacheInterceptor, CacheModule, CacheModuleOptions, MiddlewareConsumer, Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { TerminusModule } from '@nestjs/terminus';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { TypeOrmModule, TypeOrmModuleAsyncOptions } from '@nestjs/typeorm';
 import { Connection, getConnectionOptions } from 'typeorm';
 import * as redisStore from 'cache-manager-redis-store';
 import { AppController } from './app.controller';
@@ -15,26 +15,34 @@ import { AuthMiddleware } from './middleware/auth.middleware';
 import { AuthModule } from './auth/auth.module';
 import { RealtimeModule } from './realtime/realtime.module';
 import ormconfig from '../ormconfig';
-
-TypeOrmModule.forRootAsync({
-  useFactory: async () =>
-    Object.assign(await getConnectionOptions(), {
-      ...ormconfig,
-      autoLoadEntities: true,
-    }),
-});
+import realtimeConfig from './config/realtime.config';
+import redisConfig from './config/redis.config';
+import databaseConfig from './config/database.config';
 
 @Module({
   imports: [
-    ConfigModule.forRoot(),
-    CacheModule.register({
-      store: redisStore,
-      host: process.env.REDIS_HOST,
-      port: process.env.REDIS_PORT,
-      password: process.env.REDIS_AUTH,
-      ttl: 30,
+    ConfigModule.forRoot({
+      isGlobal: true,
+      cache: true,
+      load: [realtimeConfig, redisConfig, databaseConfig],
     }),
-    TypeOrmModule.forRoot(),
+    CacheModule.registerAsync({
+      useFactory: (configService: ConfigService): CacheModuleOptions => ({
+        store: redisStore,
+        ...configService.get('redis'),
+        ttl: 30,
+      }),
+      inject: [ConfigService],
+    }),
+    TypeOrmModule.forRootAsync({
+      useFactory: async (configService: ConfigService): Promise<TypeOrmModuleAsyncOptions> =>
+        Object.assign(await getConnectionOptions(), {
+          ...ormconfig,
+          ...configService.get('database'),
+          autoLoadEntities: true,
+        }),
+        inject: [ConfigService],
+    }),
     GtfsModule,
     GeoModule,
     TransitModule,

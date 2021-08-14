@@ -1,7 +1,7 @@
 /**
  * Configure API endpoints, keyed by feedIndex, agencyId
  */
-const gtfsRealtime = [
+module.exports = [
   {
     feedIndex: 1,
     agencyId: 'MTA NYCT',
@@ -62,5 +62,3 @@ const gtfsRealtime = [
     serviceAlertProto: 'gtfs-realtime-service-status',
   },
 ];
-
-export default gtfsRealtime;

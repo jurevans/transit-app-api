@@ -2,6 +2,7 @@ import { ConnectedSocket, MessageBody, SubscribeMessage, WebSocketGateway, WebSo
 import { Logger } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
 import { RealtimeService } from './realtime.service';
+import { StationsService } from './stations/stations.service';
 
 @WebSocketGateway({ cors: true })
 export class RealtimeGateway {
@@ -12,6 +13,7 @@ export class RealtimeGateway {
 
   constructor(
     private readonly realtimeService: RealtimeService,
+    private readonly stationsService: StationsService,
   ){}
 
   @SubscribeMessage('trip_updates')
@@ -21,7 +23,11 @@ export class RealtimeGateway {
   ) {
     const { stationId, feedIndex } = data;
     this.logger.log('Data', data);
-    const results = await this.realtimeService.findByStationId({ feedIndex, stationId });
+    const stops = await this.stationsService.getStops(feedIndex);
+    const stations = await this.stationsService.getStations(feedIndex);
+    const transfers = await this.stationsService.getTransfers(feedIndex);
+    const stationIds = transfers[stationId] || [stationId];
+    const results = await this.realtimeService.findByStationId({ feedIndex, stationIds });
     socket.emit('recieved_trip_updates', results);
   }
 }
