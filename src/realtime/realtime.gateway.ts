@@ -27,7 +27,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
   ){}
 
   @SubscribeMessage('trip_updates')
-  async listenForStationId(
+  async listenForTripUpdates(
     @MessageBody() data: { stationId: string, feedIndex: number },
     @ConnectedSocket() socket: Socket,
   ) {
@@ -35,11 +35,11 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     //this.logger.log('Data', data);
     const transfers = await this.stationsService.getTransfers(feedIndex);
     const stationIds = transfers[stationId] || [stationId];
-    this.schedulerRegistry.getIntervals().forEach((interval: any) => console.log('INTERVAL', interval));
+
     this.addInterval('gtfs-realtime-updates', 30000, async () => {
-      this.logger.log(`${RealtimeGateway.name} sending new trip updates!`);
+      this.logger.log('Sending new trip updates!');
       const tripUpdates = await this.realtimeService.getTripUpdates({ feedIndex, stationIds });
-      socket.emit('recieved_trip_updates', {
+      socket.emit('received_trip_updates', {
         stationId,
         transfers: stationIds,
         ...tripUpdates,
@@ -47,10 +47,23 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     });
   }
 
+  @SubscribeMessage('cancel_trip_updates')
+  listenForCancelTripUpdates() {
+    this.logger.log('Reset trip updates interval');
+    this.deleteInterval('gtfs-realtime-updates');
+  }
+
   addInterval(name: string, ms: number, callback: any) {
     callback();
     const interval = setInterval(callback, ms);
+    this.deleteInterval(name);
     this.schedulerRegistry.addInterval(name, interval);
+  }
+
+  deleteInterval(name: string) {
+    if (this.schedulerRegistry.doesExists('interval', name)) {
+      this.schedulerRegistry.deleteInterval(name);
+    }
   }
 
   handleDisconnect() {

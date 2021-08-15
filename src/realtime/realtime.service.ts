@@ -94,6 +94,7 @@ export class RealtimeService {
     stopIds: string[],
   }) {
     const { feedIndex, entities, stopIds } = props;
+    // TODO: We need to pull the timezone from Agency:
     const now = DateTime.now().toSeconds();
     const vehicles = [];
     const key = `/${VEHICLE_PREFIX}/${stopIds.join(',')}`;
@@ -115,7 +116,7 @@ export class RealtimeService {
         const { stopId, arrival } = update;
         const { time, delay } = arrival;
         if (stopIds.indexOf(update.stopId) > -1
-          && time > (now - 60)
+          && time > now
           && time < (now + (MAX_MINUTES * 60))) {
 
           const { headsign } = indexedStops[stopId];
