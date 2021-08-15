@@ -29,6 +29,7 @@ export class RoutesService {
         'r.route_long_name as "routeLongName"',
         'r.route_desc as "routeDesc"',
         'r.route_color as "routeColor"',
+        'r.route_url as "routeUrl"',
       ])
       .distinct(true)
       .innerJoin('r.trips', 't')
