@@ -10,9 +10,11 @@ export enum CacheTtlSeconds {
 export enum CacheKeyPrefix {
   VEHICLES = 'vehicles',
   TRANSFERS = 'transfers',
+  ALERTS = 'alerts',
   STOPS = 'stops',
 }
 
 export enum Intervals {
   GTFS_TRIP_UPDATES = 30000,
+  GTFS_ALERTS = 60000,
 }

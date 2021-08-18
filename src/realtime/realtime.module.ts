@@ -5,10 +5,12 @@ import { HttpModule } from '@nestjs/axios';
 import { Stops } from 'src/entities/stops.entity';
 import { Transfers } from 'src/entities/transfers.entity';
 import { RealtimeGateway } from './realtime.gateway';
-import { RealtimeService } from './realtime.service';
+import { TripUpdatesService } from './trip-updates/trip-updates.service';
 import { StationsService } from './stations.service';
 import * as redisStore from 'cache-manager-redis-store';
 import { ScheduleModule } from '@nestjs/schedule';
+import { FeedService } from './feed/feed.service';
+import { AlertsService } from './alerts/alerts.service';
 
 @Module({
   imports: [
@@ -25,6 +27,6 @@ import { ScheduleModule } from '@nestjs/schedule';
     HttpModule,
   ],
   exports: [TypeOrmModule],
-  providers: [RealtimeGateway, RealtimeService, StationsService],
+  providers: [RealtimeGateway, TripUpdatesService, StationsService, FeedService, AlertsService],
 })
 export class RealtimeModule {}

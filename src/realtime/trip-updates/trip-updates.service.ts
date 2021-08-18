@@ -1,29 +1,22 @@
 import { CACHE_MANAGER, Inject, Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
-import { ConfigService } from '@nestjs/config';
 import { Cache } from 'cache-manager';
-import fetch from 'node-fetch';
 import { DateTime } from 'luxon';
-import { StationsService } from './stations.service';
-import * as GTFS from 'proto/gtfs-realtime';
+import { StationsService } from '../stations.service';
 import { CacheKeyPrefix, CacheTtlSeconds } from 'src/constants';
+import { FeedService } from '../feed/feed.service';
 
 const MAX_MINUTES = 60;
 
 @Injectable()
-export class RealtimeService {
+export class TripUpdatesService {
   constructor(
     @Inject(CACHE_MANAGER)
     private readonly cacheManager: Cache,
-    private readonly configService: ConfigService,
     private readonly stationsService: StationsService,
     private readonly http: HttpService,
+    private readonly feedService: FeedService,
   ) {}
-
-  private _getConfig(feedIndex: number) {
-    return this.configService.get('gtfs-realtime')
-      .find((config: any) => config.feedIndex == feedIndex);
-  }
 
   private _getRouteUrls(feedUrls: any[], routeIds: string[]) {
     return feedUrls
@@ -47,7 +40,7 @@ export class RealtimeService {
     routeIds?: string[],
   }) {
     const { feedIndex, routeIds = [] } = props;
-    const { feedUrls } = this._getConfig(feedIndex);
+    const { feedUrls } = this.feedService.getConfig(feedIndex);
     // Which of these URLs should I use?
     const urls = this._getRouteUrls(feedUrls, routeIds);
 
@@ -59,26 +52,10 @@ export class RealtimeService {
         return feedMessageInCache;
       }
 
-      const feedMessage = await this.getFeed(feedIndex, endpoint);
+      const feedMessage = await this.feedService.getFeed({ feedIndex, endpoint });
       await this.cacheManager.set(endpoint, feedMessage, { ttl: CacheTtlSeconds.THIRTY_SECONDS })
       return await this.cacheManager.get(endpoint);
     }));
-  }
-
-  public async getFeed(feedIndex: number, endpoint: string): Promise<any> {
-    const { accessKey } = this._getConfig(feedIndex);
-    const accessKeyValue = this.configService.get(accessKey);
-    const options = {
-      headers: {
-        'x-api-key': accessKeyValue,
-      },
-      requestType: 'arrayBuffer',
-    };
-
-    const response = await fetch(endpoint, options);
-    const buffer = await response.buffer();
-    const feed = GTFS.FeedMessage.decode(buffer);
-    return GTFS.FeedMessage.toJSON(feed);
   }
 
   private _getTripUpdateEntities(feedMessage: any) {
@@ -198,7 +175,7 @@ export class RealtimeService {
       stopIds,
     });
 
-    const routeIdsFromStops = RealtimeService._collectRouteIds(stopTimeUpdates);
+    const routeIdsFromStops = TripUpdatesService._collectRouteIds(stopTimeUpdates);
     return {
       routeIds: routeIdsFromStops,
       stopTimeUpdates,

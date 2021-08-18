@@ -10,9 +10,10 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { RealtimeService } from './realtime.service';
+import { TripUpdatesService } from './trip-updates/trip-updates.service';
 import { StationsService } from './stations.service';
 import { Intervals } from 'src/constants';
+import { AlertsService } from './alerts/alerts.service';
 
 @WebSocketGateway({ cors: true })
 export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect {
@@ -22,7 +23,8 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
   server: Server;
 
   constructor(
-    private readonly realtimeService: RealtimeService,
+    private readonly tripUpdatesService: TripUpdatesService,
+    private readonly alertsService: AlertsService,
     private readonly stationsService: StationsService,
     private readonly schedulerRegistry: SchedulerRegistry,
   ) {}
@@ -38,8 +40,9 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
 
     this.addInterval('gtfs-realtime-updates', Intervals.GTFS_TRIP_UPDATES, async () => {
       this.logger.log('Sending new trip updates!');
-      const tripUpdates = await this.realtimeService.getTripUpdates({ feedIndex, stationIds });
+      const tripUpdates = await this.tripUpdatesService.getTripUpdates({ feedIndex, stationIds });
       socket.emit('received_trip_updates', {
+        feedIndex,
         stationId,
         transfers: stationIds,
         ...tripUpdates,
@@ -49,8 +52,31 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
 
   @SubscribeMessage('cancel_trip_updates')
   listenForCancelTripUpdates() {
-    this.logger.log('Reset trip updates interval');
+    this.logger.log('Delete trip updates interval');
     this.deleteInterval('gtfs-realtime-updates');
+  }
+
+  @SubscribeMessage('alerts')
+  async listenForAlerts(
+    @MessageBody() data: { feedIndex: number },
+    @ConnectedSocket() socket: Socket,
+  ) {
+    const { feedIndex } = data;
+
+    this.addInterval('gtfs-alerts', Intervals.GTFS_ALERTS, async () => {
+      this.logger.log('Sending new alerts!');
+      const alerts = await this.alertsService.getAlerts(feedIndex);
+      socket.emit('received_alerts', {
+        feedIndex,
+        alerts,
+      });
+    });
+  }
+
+  @SubscribeMessage('cancel_alerts')
+  listenForCancelAlerts() {
+    this.logger.log('Delete alerts interval');
+    this.deleteInterval('gtfs-alerts');
   }
 
   addInterval(name: string, ms: number, callback: any) {
