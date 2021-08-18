@@ -11,6 +11,7 @@ import * as redisStore from 'cache-manager-redis-store';
 import { ScheduleModule } from '@nestjs/schedule';
 import { FeedService } from './feed/feed.service';
 import { AlertsService } from './alerts/alerts.service';
+import { CacheTtlSeconds } from 'src/constants';
 
 @Module({
   imports: [
@@ -20,7 +21,7 @@ import { AlertsService } from './alerts/alerts.service';
       useFactory: (configService: ConfigService): CacheModuleOptions => ({
         store: redisStore,
         ...configService.get('redis'),
-        ttl: 30,
+        ttl: CacheTtlSeconds.THIRTY_SECONDS,
       }),
       inject: [ConfigService]
     }),

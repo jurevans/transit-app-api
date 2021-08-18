@@ -17,6 +17,7 @@ import { RealtimeModule } from './realtime/realtime.module';
 import gtfsRealtimeConfig from './config/gtfs.config';
 import redisConfig from './config/redis.config';
 import databaseConfig from './config/database.config';
+import { CacheTtlSeconds } from './constants';
 
 @Module({
   imports: [
@@ -29,7 +30,7 @@ import databaseConfig from './config/database.config';
       useFactory: (configService: ConfigService): CacheModuleOptions => ({
         store: redisStore,
         ...configService.get('redis'),
-        ttl: 30,
+        ttl: CacheTtlSeconds.THIRTY_SECONDS,
       }),
       inject: [ConfigService],
     }),

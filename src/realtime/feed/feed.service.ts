@@ -11,7 +11,7 @@ export class FeedService {
 
   public getConfig(feedIndex: number) {
     return this.configService.get('gtfs-realtime')
-      .find((config: any) => config.feedIndex == feedIndex);
+      .find((config: any) => config.feedIndex === feedIndex);
   }
 
   public async getFeed(props: {
