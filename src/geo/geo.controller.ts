@@ -4,6 +4,7 @@ import { StopsService } from './stops.service';
 import { Stops } from 'src/entities/stops.entity';
 import { FeatureCollection, LineString } from 'src/interfaces/geojson';
 import { ShapeRawData, StopRawData  } from 'src/interfaces/data';
+import { CacheTtlSeconds } from 'src/constants';
 
 @Controller('geo')
 export class GeoController {
@@ -12,7 +13,7 @@ export class GeoController {
     private stopsService: StopsService) {}
 
   @Get(':feedIndex/shapes')
-  @CacheTTL(86400)
+  @CacheTTL(CacheTtlSeconds.ONE_DAY)
   findShapes(
     @Param('feedIndex') feedIndex: number,
     @Query('day') day?: string,
@@ -34,7 +35,7 @@ export class GeoController {
   }
 
   @Get(':feedIndex/stops')
-  @CacheTTL(86400)
+  @CacheTTL(CacheTtlSeconds.ONE_DAY)
   async findAll(
     @Param('feedIndex') feedIndex: number,
     @Query('day') day?: string,

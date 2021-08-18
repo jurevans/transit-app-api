@@ -1,4 +1,5 @@
 import { CacheTTL, Controller, Get, Param, Query } from '@nestjs/common';
+import { CacheTtlSeconds } from 'src/constants';
 import { GtfsService } from './gtfs.service';
 
 @Controller('gtfs')
@@ -11,7 +12,7 @@ export class GtfsController {
    * @returns
    */
   @Get(':feedIndex')
-  @CacheTTL(60)
+  @CacheTTL(CacheTtlSeconds.ONE_MINUTE)
   async find(@Param('feedIndex') feedIndex: number) {
     return await this.gtfsService.find({ feedIndex });
   }
@@ -24,7 +25,7 @@ export class GtfsController {
    * @param lat
    */
   @Get(':feedIndex/location')
-  @CacheTTL(60)
+  @CacheTTL(CacheTtlSeconds.ONE_MINUTE)
   async findByLocation(
     @Param('feedIndex') feedIndex: number,
     @Query('lon') lon: number,
@@ -51,7 +52,7 @@ export class GtfsController {
    * @param feedIndex
    * @param stationIds
    */
-  @CacheTTL(10)
+   @CacheTTL(CacheTtlSeconds.THIRTY_SECONDS)
   @Get(':feedIndex/stations/:stationIds')
   async findByIds(
     @Param('feedIndex') feedIndex: number,
