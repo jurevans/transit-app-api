@@ -5,9 +5,7 @@ import { Transfers } from 'src/entities/transfers.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Cache } from 'cache-manager';
 import { getCurrentDay } from 'src/util';
-
-const STOPS_PREFIX = 'stops';
-const TRANSFERS_PREFIX = 'transfers';
+import { CacheKeyPrefix, CacheTtlSeconds } from 'src/constants';
 
 type IndexedStops = {
   [key: string]: any;
@@ -27,7 +25,7 @@ export class StationsService {
   ) {}
 
   public async getStops(feedIndex: number) {
-    const key = `/${STOPS_PREFIX}/${feedIndex}`;
+    const key = `/${CacheKeyPrefix.STOPS}/${feedIndex}`;
     const stopsFromCache = await this.cacheManager.get(key);
     const today = getCurrentDay();
 
@@ -60,12 +58,12 @@ export class StationsService {
       return indexed;
     }, {});
 
-    await this.cacheManager.set(key, indexedStops, { ttl: 86400 });
+    await this.cacheManager.set(key, indexedStops, { ttl: CacheTtlSeconds.ONE_DAY });
     return this.cacheManager.get(key);
   }
 
   public async getTransfers(feedIndex: number) {
-    const key = `/${TRANSFERS_PREFIX}/${feedIndex}`;
+    const key = `/${CacheKeyPrefix.TRANSFERS}/${feedIndex}`;
     const transfersFromCache = await this.cacheManager.get(key);
 
     if (transfersFromCache) {

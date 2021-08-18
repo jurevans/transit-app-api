@@ -1,12 +1,13 @@
 import { CACHE_MANAGER, Inject, Injectable } from '@nestjs/common';
+import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { Cache } from 'cache-manager';
 import fetch from 'node-fetch';
 import { DateTime } from 'luxon';
-import { StationsService } from './stations/stations.service';
+import { StationsService } from './stations.service';
 import * as GTFS from 'proto/gtfs-realtime';
+import { CacheKeyPrefix, CacheTtlSeconds } from 'src/constants';
 
-const VEHICLE_PREFIX = 'vehicles';
 const MAX_MINUTES = 60;
 
 @Injectable()
@@ -16,6 +17,7 @@ export class RealtimeService {
     private readonly cacheManager: Cache,
     private readonly configService: ConfigService,
     private readonly stationsService: StationsService,
+    private readonly http: HttpService,
   ) {}
 
   private _getConfig(feedIndex: number) {
@@ -23,7 +25,7 @@ export class RealtimeService {
       .find((config: any) => config.feedIndex == feedIndex);
   }
 
-  private _getUrls(feedUrls: any[], routeIds: string[]) {
+  private _getRouteUrls(feedUrls: any[], routeIds: string[]) {
     return feedUrls
       .filter((endpoint: any) => {
         if (routeIds.length > 0
@@ -45,16 +47,10 @@ export class RealtimeService {
     routeIds?: string[],
   }) {
     const { feedIndex, routeIds = [] } = props;
-    const { feedUrls, accessKey } = this._getConfig(feedIndex);
-    const accessKeyValue = this.configService.get(accessKey);
+    const { feedUrls } = this._getConfig(feedIndex);
     // Which of these URLs should I use?
-    const urls = this._getUrls(feedUrls, routeIds);
-    const options = {
-      method: 'GET',
-      headers: {
-        'x-api-key': accessKeyValue,
-      },
-    };
+    const urls = this._getRouteUrls(feedUrls, routeIds);
+
     // Add the following fetches to a queue instead?
     return Promise.all(urls.map(async (endpoint: string) => {
       // Check Redis for cached response:
@@ -63,14 +59,26 @@ export class RealtimeService {
         return feedMessageInCache;
       }
 
-      // Make new request and cache:
-      const response = await fetch(endpoint, options);
-      const body = await response.buffer();
-      const feed = GTFS.FeedMessage.decode(body);
-      const feedMessage = GTFS.FeedMessage.toJSON(feed);
-      await this.cacheManager.set(endpoint, feedMessage, { ttl: 30 })
+      const feedMessage = await this.getFeed(feedIndex, endpoint);
+      await this.cacheManager.set(endpoint, feedMessage, { ttl: CacheTtlSeconds.THIRTY_SECONDS })
       return await this.cacheManager.get(endpoint);
     }));
+  }
+
+  public async getFeed(feedIndex: number, endpoint: string): Promise<any> {
+    const { accessKey } = this._getConfig(feedIndex);
+    const accessKeyValue = this.configService.get(accessKey);
+    const options = {
+      headers: {
+        'x-api-key': accessKeyValue,
+      },
+      requestType: 'arrayBuffer',
+    };
+
+    const response = await fetch(endpoint, options);
+    const buffer = await response.buffer();
+    const feed = GTFS.FeedMessage.decode(buffer);
+    return GTFS.FeedMessage.toJSON(feed);
   }
 
   private _getTripUpdateEntities(feedMessage: any) {
@@ -97,7 +105,7 @@ export class RealtimeService {
     // TODO: We need to pull the timezone from Agency:
     const now = DateTime.now().toSeconds();
     const vehicles = [];
-    const key = `/${VEHICLE_PREFIX}/${stopIds.join(',')}`;
+    const key = `/${CacheKeyPrefix.VEHICLES}/${stopIds.join(',')}`;
     const vehiclesInCache = await this.cacheManager.get(key);
 
     if (vehiclesInCache) {
@@ -133,7 +141,7 @@ export class RealtimeService {
     });
 
     vehicles.sort((a: any, b: any) => (a.time < b.time) ? -1 : 1);
-    await this.cacheManager.set(key, vehicles, { ttl: 30 });
+    await this.cacheManager.set(key, vehicles, { ttl: CacheTtlSeconds.THIRTY_SECONDS });
     return await this.cacheManager.get(key);
   }
 

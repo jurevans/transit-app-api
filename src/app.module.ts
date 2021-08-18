@@ -14,8 +14,7 @@ import { HealthController } from './health/health.controller';
 import { AuthMiddleware } from './middleware/auth.middleware';
 import { AuthModule } from './auth/auth.module';
 import { RealtimeModule } from './realtime/realtime.module';
-import ormconfig from '../ormconfig';
-import realtimeConfig from './config/realtime.config';
+import gtfsRealtimeConfig from './config/gtfs.config';
 import redisConfig from './config/redis.config';
 import databaseConfig from './config/database.config';
 
@@ -24,7 +23,7 @@ import databaseConfig from './config/database.config';
     ConfigModule.forRoot({
       isGlobal: true,
       cache: true,
-      load: [realtimeConfig, redisConfig, databaseConfig],
+      load: [gtfsRealtimeConfig, redisConfig, databaseConfig],
     }),
     CacheModule.registerAsync({
       useFactory: (configService: ConfigService): CacheModuleOptions => ({
@@ -37,7 +36,6 @@ import databaseConfig from './config/database.config';
     TypeOrmModule.forRootAsync({
       useFactory: async (configService: ConfigService): Promise<TypeOrmModuleAsyncOptions> =>
         Object.assign(await getConnectionOptions(), {
-          ...ormconfig,
           ...configService.get('database'),
           autoLoadEntities: true,
         }),

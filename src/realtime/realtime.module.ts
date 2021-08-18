@@ -1,11 +1,12 @@
 import { Module, CacheModule, CacheModuleOptions } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { HttpModule } from '@nestjs/axios';
 import { Stops } from 'src/entities/stops.entity';
 import { Transfers } from 'src/entities/transfers.entity';
 import { RealtimeGateway } from './realtime.gateway';
 import { RealtimeService } from './realtime.service';
-import { StationsService } from './stations/stations.service';
+import { StationsService } from './stations.service';
 import * as redisStore from 'cache-manager-redis-store';
 import { ScheduleModule } from '@nestjs/schedule';
 
@@ -21,6 +22,7 @@ import { ScheduleModule } from '@nestjs/schedule';
       }),
       inject: [ConfigService]
     }),
+    HttpModule,
   ],
   exports: [TypeOrmModule],
   providers: [RealtimeGateway, RealtimeService, StationsService],

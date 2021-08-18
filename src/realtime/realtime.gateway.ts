@@ -11,7 +11,8 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { RealtimeService } from './realtime.service';
-import { StationsService } from './stations/stations.service';
+import { StationsService } from './stations.service';
+import { Intervals } from 'src/constants';
 
 @WebSocketGateway({ cors: true })
 export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect {
@@ -24,7 +25,7 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     private readonly realtimeService: RealtimeService,
     private readonly stationsService: StationsService,
     private readonly schedulerRegistry: SchedulerRegistry,
-  ){}
+  ) {}
 
   @SubscribeMessage('trip_updates')
   async listenForTripUpdates(
@@ -32,11 +33,10 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
     @ConnectedSocket() socket: Socket,
   ) {
     const { stationId, feedIndex } = data;
-    //this.logger.log('Data', data);
     const transfers = await this.stationsService.getTransfers(feedIndex);
     const stationIds = transfers[stationId] || [stationId];
 
-    this.addInterval('gtfs-realtime-updates', 30000, async () => {
+    this.addInterval('gtfs-realtime-updates', Intervals.GTFS_TRIP_UPDATES, async () => {
       this.logger.log('Sending new trip updates!');
       const tripUpdates = await this.realtimeService.getTripUpdates({ feedIndex, stationIds });
       socket.emit('received_trip_updates', {
