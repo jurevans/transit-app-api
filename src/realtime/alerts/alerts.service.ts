@@ -49,11 +49,14 @@ export class AlertsService {
       const { routeId, trip } = alert;
       let useRouteId = (routeId !== '') ? routeId : trip ? trip.routeId : '';
 
-      if (!acc[useRouteId]) {
+      if (!acc[useRouteId] && useRouteId !== '') {
         acc[useRouteId] = [];
       }
       if (useRouteId && useRouteId !== '') {
-        acc[useRouteId].push(alert);
+        acc[useRouteId].push({
+          ...alert,
+          routeId: useRouteId,
+        });
       }
       return acc;
     }, {});
