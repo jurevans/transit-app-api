@@ -114,9 +114,9 @@ export class Stops {
   ])
   wheelchairBoarding: WheelchairBoardings;
 
-  @OneToMany(() => Transfers, (transfers) => transfers.stops)
-  transfers: Transfers[];
+  @OneToMany(() => Transfers, (transfers) => transfers.fromStopId)
+  transfersFrom: Transfers[];
 
-  @OneToMany(() => Transfers, (transfers) => transfers.stops2)
-  transfers2: Transfers[];
+  @OneToMany(() => Transfers, (transfers) => transfers.toStopId)
+  transfersTo: Transfers[];
 }

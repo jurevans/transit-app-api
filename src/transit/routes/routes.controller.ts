@@ -3,13 +3,14 @@ import { RouteRawData } from 'src/interfaces/data';
 import { Routes } from 'src/entities/routes.entity';
 import { Trips } from 'src/entities/trips.entity';
 import { RoutesService } from './routes.service';
+import { CacheTtlSeconds } from 'src/constants';
 
 @Controller('routes')
 export class RoutesController {
   constructor(private routesService: RoutesService) {}
 
   @Get(':feedIndex')
-  @CacheTTL(3600)
+  @CacheTTL(CacheTtlSeconds.ONE_HOUR)
   findAll(
     @Param('feedIndex') feedIndex: number,
     @Query('day') day?: string,
@@ -18,7 +19,7 @@ export class RoutesController {
   }
 
   @Get(':feedIndex/id/:routeId')
-  @CacheTTL(60)
+  @CacheTTL(CacheTtlSeconds.ONE_MINUTE)
   async findOne(
       @Param('feedIndex') feedIndex: number,
       @Param('routeId') routeId: string,
@@ -32,7 +33,7 @@ export class RoutesController {
   }
 
   @Get(':feedIndex/trips/:routeId')
-  @CacheTTL(60)
+  @CacheTTL(CacheTtlSeconds.ONE_MINUTE)
   async findTrips(
       @Param('feedIndex') feedIndex: number,
       @Param('routeId') routeId: string,
@@ -46,7 +47,7 @@ export class RoutesController {
   }
 
   @Get(':feedIndex/id')
-  @CacheTTL(3600)
+  @CacheTTL(CacheTtlSeconds.ONE_HOUR)
   findRouteIds(@Param('feedIndex') feedIndex: number) {
     return this.routesService.findRouteIds({ feedIndex });
   }

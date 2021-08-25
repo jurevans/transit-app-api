@@ -1,24 +1,23 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, IsNull, Not } from 'typeorm';
-import { Agency } from 'src/entities/agency.entity';
 import { Routes } from 'src/entities/routes.entity';
 import { Stops } from 'src/entities/stops.entity';
 import { Feed } from './classes/feed.class';
 import { Station } from './classes/station.class';
 import { getDistance } from 'src/util';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class GtfsService {
   private _feeds: any;
 
   constructor(
-    @InjectRepository(Agency)
-    private agencyRepository: Repository<Agency>,
     @InjectRepository(Routes)
     private routesRepository: Repository<Routes>,
     @InjectRepository(Stops)
     private stopsRepository: Repository<Stops>,
+    private configService: ConfigService,
   ) {
     this._feeds = {};
   }
@@ -42,17 +41,14 @@ export class GtfsService {
   }
 
   private async _initializeFeed(feedIndex: number) {
-    const agency = await this.agencyRepository.findOne({ feedIndex });
-    const feed = new Feed(agency);
+    const configs = this.configService.get('gtfs-realtime');
+    const config = configs.find((config: any) => config.feedIndex == feedIndex);
+    const { accessKey } = config;
+    const accessKeyValue = this.configService.get(accessKey);
+    const feed = new Feed(config, accessKeyValue);
     const stations = await this._getStops(feedIndex, true);
     const stops = await this._getStops(feedIndex, false);
     feed.initializeStations(stations, stops);
-
-    const routeIdsResults = await this.routesRepository.find({
-      select: [ 'routeId'],
-      where: { feedIndex },
-    });
-    feed.initializeRoutes(routeIdsResults.map((result: any) => result.routeId));
 
     return feed;
   }
