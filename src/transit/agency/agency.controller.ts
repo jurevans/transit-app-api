@@ -7,12 +7,12 @@ import { CacheTtlSeconds } from 'src/constants';
 export class AgencyController {
   constructor(private agencyService: AgencyService) {}
 
-  @Get(':feedIndex/id/:agencyId')
+  @Get('feeds/:feedIndexList')
   @CacheTTL(CacheTtlSeconds.ONE_DAY)
   async findOne(
-    @Param('feedIndex') feedIndex: number,
-    @Param('agencyId') agencyId: string,
-  ): Promise<Agency> {
-    return await this.agencyService.findOne({ feedIndex, agencyId });
+    @Param('feedIndexList') feedIndexList: string,
+  ): Promise<Agency[]> {
+    const feedIndices = feedIndexList.split(',');
+    return await this.agencyService.findOne({ feedIndices });
   }
 }

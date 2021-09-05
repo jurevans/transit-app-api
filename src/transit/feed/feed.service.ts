@@ -11,15 +11,9 @@ export class FeedService {
   ) {}
 
   find() {
-    return this.feedInfoRepository
-      .createQueryBuilder('f')
-      .select([
-        'f.feedIndex as "feedIndex"',
-        'a.agencyId as "agencyId"',
-        'a.agencyName as "agencyName"',
-      ])
-      .innerJoin('f.agencies', 'a')
-      .getRawMany();
+    return this.feedInfoRepository.find({
+      select: ['feedIndex', 'feedStartDate', 'feedEndDate'],
+    });
   }
 
   findOne(props: { feedIndex: number }) {
