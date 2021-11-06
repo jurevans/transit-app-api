@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { Agency } from 'src/entities/agency.entity';
 
 @Injectable()
@@ -10,8 +10,19 @@ export class AgencyService {
     private agencyRepository: Repository<Agency>,
   ) {}
 
-  findOne(props: { feedIndex: number, agencyId: string }) {
-    const { feedIndex, agencyId } = props;
-    return this.agencyRepository.findOne({ feedIndex, agencyId });
+  findOne(props: { feedIndices: string[] }) {
+    const { feedIndices } = props;
+    return this.agencyRepository.find({
+      select: [
+        'feedIndex',
+        'agencyId',
+        'agencyName',
+        'agencyUrl',
+        'agencyTimezone',
+        'agencyPhone',
+        'agencyLang',
+      ],
+      where: { feedIndex: In(feedIndices) },
+    });
   }
 }

@@ -7,7 +7,7 @@ import { CacheTtlSeconds } from 'src/constants';
 export class FeedController {
   constructor(private feedService: FeedService) {}
   @Get()
-  @CacheTTL(86400)
+  @CacheTTL(CacheTtlSeconds.ONE_DAY)
   async find(): Promise<FeedInfo[]> {
     return this.feedService.find();
   }
