@@ -65,7 +65,7 @@ export class FeedInfo {
 
   @OneToMany(
     () => FareAttributes,
-    (fareAttributes) => fareAttributes.feedIndex2
+    (fareAttributes) => fareAttributes.feedIndex2,
   )
   fareAttributes: FareAttributes[];
 

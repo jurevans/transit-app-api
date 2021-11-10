@@ -1,4 +1,10 @@
-import { CacheInterceptor, CacheModule, CacheModuleOptions, MiddlewareConsumer, Module } from '@nestjs/common';
+import {
+  CacheInterceptor,
+  CacheModule,
+  CacheModuleOptions,
+  MiddlewareConsumer,
+  Module,
+} from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { TerminusModule } from '@nestjs/terminus';
@@ -35,12 +41,14 @@ import { CacheTtlSeconds } from './constants';
       inject: [ConfigService],
     }),
     TypeOrmModule.forRootAsync({
-      useFactory: async (configService: ConfigService): Promise<TypeOrmModuleAsyncOptions> =>
+      useFactory: async (
+        configService: ConfigService,
+      ): Promise<TypeOrmModuleAsyncOptions> =>
         Object.assign(await getConnectionOptions(), {
           ...configService.get('database'),
           autoLoadEntities: true,
         }),
-        inject: [ConfigService],
+      inject: [ConfigService],
     }),
     GtfsModule,
     GeoModule,
@@ -49,10 +57,7 @@ import { CacheTtlSeconds } from './constants';
     AuthModule,
     RealtimeModule,
   ],
-  controllers: [
-    AppController,
-    HealthController,
-  ],
+  controllers: [AppController, HealthController],
   providers: [
     {
       provide: APP_INTERCEPTOR,

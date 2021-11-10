@@ -16,8 +16,8 @@ export class RoutesService {
   ) {}
 
   async findAll(props: {
-    feedIndex: number,
-    day?: string,
+    feedIndex: number;
+    day?: string;
   }): Promise<RouteRawData> {
     const { feedIndex, day } = props;
     const today = day || getCurrentDay();
@@ -43,9 +43,9 @@ export class RoutesService {
   }
 
   async findOne(params: {
-    feedIndex: number,
-    routeId: string,
-    day?: string,
+    feedIndex: number;
+    routeId: string;
+    day?: string;
   }): Promise<Routes> {
     const { feedIndex, routeId, day } = params;
     const today = day || getCurrentDay();
@@ -69,11 +69,7 @@ export class RoutesService {
     return routes;
   }
 
-  async findTrips(props: {
-    feedIndex: number,
-    routeId: string,
-    day: string,
-  }) {
+  async findTrips(props: { feedIndex: number; routeId: string; day: string }) {
     const { feedIndex, routeId, day } = props;
     const today = day || getCurrentDay();
 
@@ -88,10 +84,10 @@ export class RoutesService {
     return trips;
   }
 
-  async findRouteIds(props: { feedIndex: number}): Promise<any> {
+  async findRouteIds(props: { feedIndex: number }): Promise<any> {
     const { feedIndex } = props;
     const routeIdsResults = await this.routesRepository.find({
-      select: [ 'routeId'],
+      select: ['routeId'],
       where: { feedIndex },
     });
     return routeIdsResults.map((routeIdResult: any) => routeIdResult.routeId);

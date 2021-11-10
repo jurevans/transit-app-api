@@ -4,8 +4,8 @@
 export type Coordinate = [number, number];
 
 export type LineString = {
-  type: 'LineString',
-  coordinates: Coordinate[],
+  type: 'LineString';
+  coordinates: Coordinate[];
 };
 
 export interface Geometry {
@@ -23,7 +23,7 @@ export interface Feature {
     url?: string;
     id?: string;
     routeid?: string;
-  }
+  };
 }
 
 export interface FeatureCollection {

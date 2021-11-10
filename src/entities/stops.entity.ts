@@ -95,7 +95,7 @@ export class Stops {
 
   @ManyToOne(
     () => WheelchairAccessible,
-    (wheelchairAccessible) => wheelchairAccessible.stops
+    (wheelchairAccessible) => wheelchairAccessible.stops,
   )
   @JoinColumn([
     {
@@ -107,7 +107,7 @@ export class Stops {
 
   @ManyToOne(
     () => WheelchairBoardings,
-    (wheelchairBoardings) => wheelchairBoardings.stops
+    (wheelchairBoardings) => wheelchairBoardings.stops,
   )
   @JoinColumn([
     { name: 'wheelchair_boarding', referencedColumnName: 'wheelchairBoarding' },

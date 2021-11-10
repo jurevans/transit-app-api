@@ -1,11 +1,19 @@
-import { Column, Entity, Index, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  Index,
+  JoinColumn,
+  ManyToOne,
+  PrimaryColumn,
+} from 'typeorm';
 import { Calendar } from './calendar.entity';
 import { FeedInfo } from './feedInfo.entity';
 import { Routes } from './routes.entity';
-import { Stops } from './stops.entity';
 import { TransferTypes } from './transferTypes.entity';
 
-@Index('transfers_pkey', ['feedIndex', 'fromStopId', 'toStopId'], { unique: true })
+@Index('transfers_pkey', ['feedIndex', 'fromStopId', 'toStopId'], {
+  unique: true,
+})
 @Entity('transfers', { schema: 'gtfs' })
 export class Transfers {
   @PrimaryColumn('number', { name: 'feed_index' })
@@ -49,21 +57,6 @@ export class Transfers {
   ])
   routes2: Routes;
 
-/*
-  @ManyToOne(() => Stops, (stops) => stops.transfersFrom)
-  @JoinColumn([
-    { name: 'feed_index', referencedColumnName: 'feedIndex' },
-    { name: 'from_stop_id', referencedColumnName: 'stopId' },
-  ])
-  fromStopId: Stops;
-
-  @ManyToOne(() => Stops, (stops) => stops.transfersTo)
-  @JoinColumn([
-    { name: 'feed_index', referencedColumnName: 'feedIndex' },
-    { name: 'to_stop_id', referencedColumnName: 'stopId' },
-  ])
-  toStopId: Stops;
-*/
   @ManyToOne(() => TransferTypes, (transferTypes) => transferTypes.transfers)
   @JoinColumn([{ name: 'transfer_type', referencedColumnName: 'transferType' }])
   transferType: TransferTypes;

@@ -16,7 +16,9 @@ import { Intervals } from 'src/constants';
 import { AlertsService } from './alerts/alerts.service';
 
 @WebSocketGateway({ cors: true })
-export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class RealtimeGateway
+  implements OnGatewayConnection, OnGatewayDisconnect
+{
   private readonly logger = new Logger(RealtimeGateway.name);
 
   @WebSocketServer()
@@ -31,23 +33,30 @@ export class RealtimeGateway implements OnGatewayConnection, OnGatewayDisconnect
 
   @SubscribeMessage('trip_updates')
   async listenForTripUpdates(
-    @MessageBody() data: { stationId: string, feedIndex: number },
+    @MessageBody() data: { stationId: string; feedIndex: number },
     @ConnectedSocket() socket: Socket,
   ) {
     const { stationId, feedIndex } = data;
     const transfers = await this.stationsService.getTransfers(feedIndex);
     const stationIds = transfers[stationId] || [stationId];
 
-    this.addInterval('gtfs-realtime-updates', Intervals.GTFS_TRIP_UPDATES, async () => {
-      this.logger.log('Sending new trip updates!');
-      const tripUpdates = await this.tripUpdatesService.getTripUpdates({ feedIndex, stationIds });
-      socket.emit('received_trip_updates', {
-        feedIndex,
-        stationId,
-        transfers: stationIds,
-        ...tripUpdates,
-      });
-    });
+    this.addInterval(
+      'gtfs-realtime-updates',
+      Intervals.GTFS_TRIP_UPDATES,
+      async () => {
+        this.logger.log('Sending new trip updates!');
+        const tripUpdates = await this.tripUpdatesService.getTripUpdates({
+          feedIndex,
+          stationIds,
+        });
+        socket.emit('received_trip_updates', {
+          feedIndex,
+          stationId,
+          transfers: stationIds,
+          ...tripUpdates,
+        });
+      },
+    );
   }
 
   @SubscribeMessage('cancel_trip_updates')

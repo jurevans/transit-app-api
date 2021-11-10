@@ -50,15 +50,19 @@ export class StationsService {
       INNER JOIN calendar cal
       ON cal.service_id = t.service_id
       WHERE s.feed_index = ${feedIndex}
-        AND cal.${today} = 1`
+        AND cal.${today} = 1`);
+
+    const indexedStops: IndexedStops = stops.reduce(
+      (indexed: IndexedStops, stop: Stops) => {
+        indexed[stop.stopId] = stop;
+        return indexed;
+      },
+      {},
     );
 
-    const indexedStops: IndexedStops = stops.reduce((indexed: IndexedStops, stop: Stops) => {
-      indexed[stop.stopId] = stop;
-      return indexed;
-    }, {});
-
-    await this.cacheManager.set(key, indexedStops, { ttl: CacheTtlSeconds.ONE_DAY });
+    await this.cacheManager.set(key, indexedStops, {
+      ttl: CacheTtlSeconds.ONE_DAY,
+    });
     return this.cacheManager.get(key);
   }
 
@@ -75,13 +79,16 @@ export class StationsService {
       where: { feedIndex },
     });
 
-    const indexedTransfers: IndexedTransfers = transfers.reduce((indexed: IndexedTransfers, transfer: Transfers) => {
-      if (!indexed[transfer.fromStopId]) {
-        indexed[transfer.fromStopId] = [];
-      }
-      indexed[transfer.fromStopId].push(transfer.toStopId);
-      return indexed;
-    }, {});
+    const indexedTransfers: IndexedTransfers = transfers.reduce(
+      (indexed: IndexedTransfers, transfer: Transfers) => {
+        if (!indexed[transfer.fromStopId]) {
+          indexed[transfer.fromStopId] = [];
+        }
+        indexed[transfer.fromStopId].push(transfer.toStopId);
+        return indexed;
+      },
+      {},
+    );
 
     await this.cacheManager.set(key, indexedTransfers, { ttl: 0 });
     return this.cacheManager.get(key);

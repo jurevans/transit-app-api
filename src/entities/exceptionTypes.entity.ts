@@ -12,7 +12,7 @@ export class ExceptionTypes {
 
   @OneToMany(
     () => CalendarDates,
-    (calendarDates) => calendarDates.exceptionType
+    (calendarDates) => calendarDates.exceptionType,
   )
   calendarDates: CalendarDates[];
 }

@@ -30,6 +30,6 @@ export interface RouteRawDataItem {
   routeLongName: string;
   routeDesc: string;
   routeColor: string | null;
-};
+}
 
 export type RouteRawData = RouteRawDataItem[];

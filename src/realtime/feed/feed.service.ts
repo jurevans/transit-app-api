@@ -5,18 +5,17 @@ import * as GTFS from 'proto/gtfs-realtime';
 
 @Injectable()
 export class FeedService {
-  constructor (
-    private readonly configService: ConfigService,
-  ) {}
+  constructor(private readonly configService: ConfigService) {}
 
   public getConfig(feedIndex: number) {
-    return this.configService.get('gtfs-realtime')
+    return this.configService
+      .get('gtfs-realtime')
       .find((config: any) => config.feedIndex === feedIndex);
   }
 
   public async getFeed(props: {
-    feedIndex: number,
-    endpoint: string,
+    feedIndex: number;
+    endpoint: string;
   }): Promise<any> {
     const { feedIndex, endpoint } = props;
     const { accessKey } = this.getConfig(feedIndex);

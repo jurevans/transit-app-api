@@ -1,6 +1,10 @@
 import { Column, Entity, Index, PrimaryColumn } from 'typeorm';
 
-@Index('shapes_pkey', ['shapeId', 'shapePtLon', 'shapePtLat', 'shapePtSequence'], { unique: true })
+@Index(
+  'shapes_pkey',
+  ['shapeId', 'shapePtLon', 'shapePtLat', 'shapePtSequence'],
+  { unique: true },
+)
 @Entity('shapes', { schema: 'gtfs' })
 export class Shapes {
   @Column('integer', { name: 'feed_index' })

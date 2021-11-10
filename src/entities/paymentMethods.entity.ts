@@ -12,7 +12,7 @@ export class PaymentMethods {
 
   @OneToMany(
     () => FareAttributes,
-    (fareAttributes) => fareAttributes.paymentMethod
+    (fareAttributes) => fareAttributes.paymentMethod,
   )
   fareAttributes: FareAttributes[];
 }

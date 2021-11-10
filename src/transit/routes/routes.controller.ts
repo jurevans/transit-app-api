@@ -1,4 +1,11 @@
-import { CacheTTL, Controller, Get, NotFoundException, Param, Query } from '@nestjs/common';
+import {
+  CacheTTL,
+  Controller,
+  Get,
+  NotFoundException,
+  Param,
+  Query,
+} from '@nestjs/common';
 import { RouteRawData } from 'src/interfaces/data';
 import { Routes } from 'src/entities/routes.entity';
 import { Trips } from 'src/entities/trips.entity';
@@ -21,11 +28,15 @@ export class RoutesController {
   @Get(':feedIndex/id/:routeId')
   @CacheTTL(CacheTtlSeconds.ONE_MINUTE)
   async findOne(
-      @Param('feedIndex') feedIndex: number,
-      @Param('routeId') routeId: string,
-      @Query('day') day?: string,
-    ): Promise<Routes> {
-    const routes = await this.routesService.findOne({ feedIndex, routeId, day });
+    @Param('feedIndex') feedIndex: number,
+    @Param('routeId') routeId: string,
+    @Query('day') day?: string,
+  ): Promise<Routes> {
+    const routes = await this.routesService.findOne({
+      feedIndex,
+      routeId,
+      day,
+    });
     if (!routes) {
       throw new NotFoundException();
     }
@@ -35,11 +46,15 @@ export class RoutesController {
   @Get(':feedIndex/trips/:routeId')
   @CacheTTL(CacheTtlSeconds.ONE_MINUTE)
   async findTrips(
-      @Param('feedIndex') feedIndex: number,
-      @Param('routeId') routeId: string,
-      @Query('day') day?: string,
-    ): Promise<Trips[]> {
-    const trips = await this.routesService.findTrips({ feedIndex, routeId, day });
+    @Param('feedIndex') feedIndex: number,
+    @Param('routeId') routeId: string,
+    @Query('day') day?: string,
+  ): Promise<Trips[]> {
+    const trips = await this.routesService.findTrips({
+      feedIndex,
+      routeId,
+      day,
+    });
     if (!trips) {
       throw new NotFoundException();
     }

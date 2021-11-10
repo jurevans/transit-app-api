@@ -21,9 +21,10 @@ export class TripUpdatesService {
   private _getRouteUrls(feedUrls: any[], routeIds: string[]) {
     return feedUrls
       .filter((endpoint: any) => {
-        if (routeIds.length > 0
-            && endpoint.hasOwnProperty('routes')) {
-          return endpoint.routes.some((route: string) => routeIds.indexOf(route) > -1);
+        if (routeIds.length > 0 && endpoint.hasOwnProperty('routes')) {
+          return endpoint.routes.some(
+            (route: string) => routeIds.indexOf(route) > -1,
+          );
         }
         return true;
       })
@@ -36,8 +37,8 @@ export class TripUpdatesService {
   }
 
   private async _getFeedMessage(props: {
-    feedIndex: number,
-    routeIds?: string[],
+    feedIndex: number;
+    routeIds?: string[];
   }) {
     const { feedIndex, routeIds = [] } = props;
     const { feedUrls } = this.feedService.getConfig(feedIndex);
@@ -45,21 +46,30 @@ export class TripUpdatesService {
     const urls = this._getRouteUrls(feedUrls, routeIds);
 
     // Add the following fetches to a queue instead?
-    return Promise.all(urls.map(async (endpoint: string) => {
-      // Check Redis for cached response:
-      const feedMessageInCache = await this.cacheManager.get(endpoint);
-      if (feedMessageInCache) {
-        return feedMessageInCache;
-      }
+    return Promise.all(
+      urls.map(async (endpoint: string) => {
+        // Check Redis for cached response:
+        const feedMessageInCache = await this.cacheManager.get(endpoint);
+        if (feedMessageInCache) {
+          return feedMessageInCache;
+        }
 
-      const feedMessage = await this.feedService.getFeed({ feedIndex, endpoint });
-      await this.cacheManager.set(endpoint, feedMessage, { ttl: CacheTtlSeconds.THIRTY_SECONDS })
-      return await this.cacheManager.get(endpoint);
-    }));
+        const feedMessage = await this.feedService.getFeed({
+          feedIndex,
+          endpoint,
+        });
+        await this.cacheManager.set(endpoint, feedMessage, {
+          ttl: CacheTtlSeconds.THIRTY_SECONDS,
+        });
+        return await this.cacheManager.get(endpoint);
+      }),
+    );
   }
 
   private _getTripUpdateEntities(feedMessage: any) {
-    return feedMessage.entity.filter((entity: any) => entity.hasOwnProperty('tripUpdate'));
+    return feedMessage.entity.filter((entity: any) =>
+      entity.hasOwnProperty('tripUpdate'),
+    );
   }
 
   private static _collectRouteIds(stopTimeUpdates: any) {
@@ -74,9 +84,9 @@ export class TripUpdatesService {
   }
 
   private async _getStopTimeUpdates(props: {
-    feedIndex: number,
-    entities: any[],
-    stopIds: string[],
+    feedIndex: number;
+    entities: any[];
+    stopIds: string[];
   }) {
     const { feedIndex, entities, stopIds } = props;
     // TODO: We need to pull the timezone from Agency:
@@ -100,10 +110,11 @@ export class TripUpdatesService {
         }
         const { stopId, arrival } = update;
         const { time, delay } = arrival;
-        if (stopIds.indexOf(update.stopId) > -1
-          && time > now
-          && time < (now + (MAX_MINUTES * 60))) {
-
+        if (
+          stopIds.indexOf(update.stopId) > -1 &&
+          time > now &&
+          time < now + MAX_MINUTES * 60
+        ) {
           const { headsign } = indexedStops[stopId];
           vehicles.push({
             stopId,
@@ -117,14 +128,16 @@ export class TripUpdatesService {
       });
     });
 
-    vehicles.sort((a: any, b: any) => (a.time < b.time) ? -1 : 1);
-    await this.cacheManager.set(key, vehicles, { ttl: CacheTtlSeconds.THIRTY_SECONDS });
+    vehicles.sort((a: any, b: any) => (a.time < b.time ? -1 : 1));
+    await this.cacheManager.set(key, vehicles, {
+      ttl: CacheTtlSeconds.THIRTY_SECONDS,
+    });
     return await this.cacheManager.get(key);
   }
 
   public async getTripUpdates(props: {
-    feedIndex: number,
-    stationIds: string[],
+    feedIndex: number;
+    stationIds: string[];
   }) {
     const { feedIndex, stationIds = [] } = props;
 
@@ -135,7 +148,7 @@ export class TripUpdatesService {
         ...Object.keys(allStops)
           .filter((key: any) => allStops[key].parentStation === stationId)
           .map((key: string) => allStops[key]),
-      ]
+      ];
       return stops;
     }, []);
 
@@ -158,13 +171,13 @@ export class TripUpdatesService {
       id: string;
       tripUpdate: {
         stopTimeUpdate: any[];
-      }
+      };
     };
 
     const entities: any = feedMessages.reduce((acc: Entity[], feedMessage) => {
       const tripUpdates = this._getTripUpdateEntities(feedMessage);
       if (tripUpdates.length > 0) {
-        acc = [ ...acc, ...tripUpdates];
+        acc = [...acc, ...tripUpdates];
         return acc;
       }
     }, []);
@@ -175,7 +188,8 @@ export class TripUpdatesService {
       stopIds,
     });
 
-    const routeIdsFromStops = TripUpdatesService._collectRouteIds(stopTimeUpdates);
+    const routeIdsFromStops =
+      TripUpdatesService._collectRouteIds(stopTimeUpdates);
     return {
       routeIds: routeIdsFromStops,
       stopTimeUpdates,

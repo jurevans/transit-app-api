@@ -11,7 +11,7 @@ export class AuthMiddleware implements NestMiddleware {
     passport.authenticate(
       'headerapikey',
       { session: false, failureRedirect: '/unauthorized' },
-      value => {
+      (value) => {
         if (value) {
           next();
         } else {

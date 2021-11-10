@@ -90,14 +90,12 @@ export class Trips {
   routes: Routes;
 
   @ManyToMany(() => Shapes)
-  @JoinTable(
-    { name: 'shapes', joinColumns: [{ name: 'shape_id' }] },
-  )
+  @JoinTable({ name: 'shapes', joinColumns: [{ name: 'shape_id' }] })
   shapes: Shapes[];
 
   @ManyToOne(
     () => WheelchairAccessible,
-    (wheelchairAccessible) => wheelchairAccessible.trips
+    (wheelchairAccessible) => wheelchairAccessible.trips,
   )
   @JoinColumn([
     {

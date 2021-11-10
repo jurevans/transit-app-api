@@ -1,6 +1,7 @@
 import { getManager } from 'typeorm';
 
 export class LocationService {
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   constructor() {}
 
   async findLocation(params: { feedIndex: number }) {
