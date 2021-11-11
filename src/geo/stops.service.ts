@@ -11,11 +11,7 @@ export class StopsService {
     private stopsRepository: Repository<Stops>,
   ) {}
 
-  async findAll(props: {
-    feedIndex: number,
-    day?: string,
-    geojson?: string,
-   }) {
+  async findAll(props: { feedIndex: number; day?: string; geojson?: string }) {
     const { day, geojson } = props;
     const manager = getManager();
     const today = day || getCurrentDay();
@@ -86,7 +82,10 @@ export class StopsService {
 
     if (geojson === 'true') {
       const jsonBuilderData = await manager.query(jsonBuilder);
-      if (jsonBuilderData.length > 0 && jsonBuilderData[0].hasOwnProperty('json_build_object')) {
+      if (
+        jsonBuilderData.length > 0 &&
+        jsonBuilderData[0].hasOwnProperty('json_build_object')
+      ) {
         return jsonBuilderData[0].json_build_object;
       } else {
         // Throw an error instead?
@@ -100,7 +99,7 @@ export class StopsService {
     `);
   }
 
-  findOne(props: { feedIndex: number, stopId: string }): Promise<Stops> {
+  findOne(props: { feedIndex: number; stopId: string }): Promise<Stops> {
     const { feedIndex, stopId } = props;
     return this.stopsRepository.findOne({ where: { feedIndex, stopId } });
   }

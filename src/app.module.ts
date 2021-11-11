@@ -13,9 +13,8 @@ import { Connection, getConnectionOptions } from 'typeorm';
 import * as redisStore from 'cache-manager-redis-store';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { GtfsModule } from './gtfs/gtfs.module';
 import { GeoModule } from './geo/geo.module';
-import { TransitModule } from './transit/transit.module';
+import { GTFSModule } from './gtfs/gtfs.module';
 import { HealthController } from './health/health.controller';
 import { AuthMiddleware } from './middleware/auth.middleware';
 import { AuthModule } from './auth/auth.module';
@@ -50,9 +49,8 @@ import { CacheTtlSeconds } from './constants';
         }),
       inject: [ConfigService],
     }),
-    GtfsModule,
     GeoModule,
-    TransitModule,
+    GTFSModule,
     TerminusModule,
     AuthModule,
     RealtimeModule,

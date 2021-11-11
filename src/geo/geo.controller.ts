@@ -1,16 +1,24 @@
-import { Controller, Get, Param, Query, NotFoundException, CacheTTL } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  Query,
+  NotFoundException,
+  CacheTTL,
+} from '@nestjs/common';
 import { ShapesService } from './shapes.service';
 import { StopsService } from './stops.service';
 import { Stops } from 'src/entities/stops.entity';
 import { FeatureCollection, LineString } from 'src/interfaces/geojson';
-import { ShapeRawData, StopRawData  } from 'src/interfaces/data';
+import { ShapeRawData, StopRawData } from 'src/interfaces/data';
 import { CacheTtlSeconds } from 'src/constants';
 
 @Controller('geo')
 export class GeoController {
   constructor(
     private shapesService: ShapesService,
-    private stopsService: StopsService) {}
+    private stopsService: StopsService,
+  ) {}
 
   @Get(':feedIndex/shapes')
   @CacheTTL(CacheTtlSeconds.ONE_DAY)
@@ -18,7 +26,7 @@ export class GeoController {
     @Param('feedIndex') feedIndex: number,
     @Query('day') day?: string,
     @Query('geojson') geojson?: string,
-    ): Promise<FeatureCollection | ShapeRawData> {
+  ): Promise<FeatureCollection | ShapeRawData> {
     return this.shapesService.findShapes({ feedIndex, day, geojson });
   }
 
