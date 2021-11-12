@@ -59,3 +59,14 @@ export const getDistance = (
     return dist;
   }
 };
+
+/**
+ * Format key
+ * @param keyPrefix
+ * @param value
+ * @returns {string}
+ */
+export const formatCacheKey = (
+  keyPrefix: string,
+  value: string | number,
+): string => `/${keyPrefix}/${value}`;

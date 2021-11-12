@@ -1,5 +1,5 @@
 import { CACHE_MANAGER, Inject, Injectable } from '@nestjs/common';
-import { HttpService } from '@nestjs/axios';
+//import { HttpService } from '@nestjs/axios';
 import { Cache } from 'cache-manager';
 import { DateTime } from 'luxon';
 import { StationsService } from '../stations.service';
@@ -14,7 +14,9 @@ export class TripUpdatesService {
     @Inject(CACHE_MANAGER)
     private readonly cacheManager: Cache,
     private readonly stationsService: StationsService,
-    private readonly http: HttpService,
+    // TODO: Is it worth utilizing HttpService?
+    // NOTE: This would return an Observable and change the implementation
+    //private readonly http: HttpService,
     private readonly feedService: FeedService,
   ) {}
 
@@ -89,7 +91,7 @@ export class TripUpdatesService {
     stopIds: string[];
   }) {
     const { feedIndex, entities, stopIds } = props;
-    // TODO: We need to pull the timezone from Agency:
+    // TODO: We need to pull the timezone from the Agency table:
     const now = DateTime.now().toSeconds();
     const vehicles = [];
     const key = `/${CacheKeyPrefix.VEHICLES}/${stopIds.join(',')}`;
@@ -174,13 +176,16 @@ export class TripUpdatesService {
       };
     };
 
-    const entities: any = feedMessages.reduce((acc: Entity[], feedMessage) => {
-      const tripUpdates = this._getTripUpdateEntities(feedMessage);
-      if (tripUpdates.length > 0) {
-        acc = [...acc, ...tripUpdates];
-        return acc;
-      }
-    }, []);
+    const entities: any = feedMessages.reduce(
+      (entities: Entity[], feedMessage) => {
+        const tripUpdates = this._getTripUpdateEntities(feedMessage);
+        if (tripUpdates.length > 0) {
+          entities = [...entities, ...tripUpdates];
+          return entities;
+        }
+      },
+      [],
+    );
 
     const stopTimeUpdates = await this._getStopTimeUpdates({
       feedIndex,

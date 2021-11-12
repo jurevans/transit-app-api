@@ -2,6 +2,7 @@ import { CACHE_MANAGER, Inject, Injectable } from '@nestjs/common';
 import { Cache } from 'cache-manager';
 import { CacheKeyPrefix, CacheTtlSeconds } from 'src/constants';
 import { FeedService } from '../feed/feed.service';
+import { formatCacheKey } from 'src/util';
 
 @Injectable()
 export class AlertsService {
@@ -13,7 +14,8 @@ export class AlertsService {
 
   public async getAlerts(feedIndex: number) {
     const { serviceAlertUrl } = this.feedService.getConfig(feedIndex);
-    const key = `/${CacheKeyPrefix.ALERTS}/${feedIndex}`;
+    const key = formatCacheKey(CacheKeyPrefix.ALERTS, feedIndex);
+
     const alertsInCache = await this.cacheManager.get(key);
 
     if (alertsInCache) {
