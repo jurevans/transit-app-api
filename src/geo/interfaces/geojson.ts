@@ -3,10 +3,10 @@
  */
 export type Coordinate = [number, number];
 
-export type LineString = {
+export interface LineString {
   type: 'LineString';
   coordinates: Coordinate[];
-};
+}
 
 export interface Geometry {
   type: 'LineString' | 'Point' | 'Polygon'; // There are others, but will not likely be used here

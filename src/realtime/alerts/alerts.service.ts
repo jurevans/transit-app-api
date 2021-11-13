@@ -1,8 +1,11 @@
 import { CACHE_MANAGER, Inject, Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Cache } from 'cache-manager';
-import { CacheKeyPrefix, CacheTtlSeconds } from 'src/constants';
 import { FeedService } from '../feed/feed.service';
+import { CacheKeyPrefix, CacheTtlSeconds } from 'src/constants';
 import { formatCacheKey } from 'src/util';
+import { IAlerts } from '../interfaces/alerts';
+import { IFeed } from '../interfaces/feed';
 
 @Injectable()
 export class AlertsService {
@@ -10,24 +13,29 @@ export class AlertsService {
     @Inject(CACHE_MANAGER)
     private readonly cacheManager: Cache,
     private readonly feedService: FeedService,
+    private readonly configService: ConfigService,
   ) {}
 
-  public async getAlerts(feedIndex: number) {
-    const { serviceAlertUrl } = this.feedService.getConfig(feedIndex);
+  public async getAlerts(feedIndex: number): Promise<IAlerts> {
+    const config = await this.configService
+      .get('gtfs-realtime')
+      .find((config: any) => config.feedIndex === feedIndex);
+    const { serviceAlertUrl } = config;
+
     const key = formatCacheKey(CacheKeyPrefix.ALERTS, feedIndex);
 
-    const alertsInCache = await this.cacheManager.get(key);
+    const alertsInCache: IAlerts = await this.cacheManager.get(key);
 
     if (alertsInCache) {
       return alertsInCache;
     }
 
-    const feedMessage = await this.feedService.getFeed({
+    const feed: IFeed = await this.feedService.getFeed({
       feedIndex,
       endpoint: serviceAlertUrl,
     });
 
-    const entities = feedMessage.entity;
+    const entities = feed.entity;
     const alerts = entities.map((entity: any) => {
       const { alert } = entity;
       const { cause, effect } = alert;
@@ -66,6 +74,7 @@ export class AlertsService {
     await this.cacheManager.set(key, alertsByRouteId, {
       ttl: CacheTtlSeconds.ONE_MINUTE,
     });
+
     return alertsByRouteId;
   }
 }

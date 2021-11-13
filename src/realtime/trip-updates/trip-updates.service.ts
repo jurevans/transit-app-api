@@ -5,6 +5,7 @@ import { DateTime } from 'luxon';
 import { StationsService } from '../stations.service';
 import { CacheKeyPrefix, CacheTtlSeconds } from 'src/constants';
 import { FeedService } from '../feed/feed.service';
+import { IIndexedStops } from '../interfaces/stations';
 
 const MAX_MINUTES = 60;
 
@@ -143,7 +144,9 @@ export class TripUpdatesService {
   }) {
     const { feedIndex, stationIds = [] } = props;
 
-    const allStops = await this.stationsService.getStops(feedIndex);
+    const allStops: IIndexedStops = await this.stationsService.getStops(
+      feedIndex,
+    );
     const stops = stationIds.reduce((stops: any[], stationId: string) => {
       stops = [
         ...stops,

@@ -12,6 +12,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { FeedService } from './feed/feed.service';
 import { AlertsService } from './alerts/alerts.service';
 import { CacheTtlSeconds } from 'src/constants';
+import { AlertsController } from './alerts/alerts.controller';
 
 @Module({
   imports: [
@@ -35,5 +36,6 @@ import { CacheTtlSeconds } from 'src/constants';
     FeedService,
     AlertsService,
   ],
+  controllers: [AlertsController],
 })
 export class RealtimeModule {}

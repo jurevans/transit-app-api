@@ -9,8 +9,9 @@ import {
 import { ShapesService } from './shapes.service';
 import { StopsService } from './stops.service';
 import { Stops } from 'src/entities/stops.entity';
-import { FeatureCollection, LineString } from 'src/interfaces/geojson';
-import { ShapeRawData, StopRawData } from 'src/interfaces/data';
+import { FeatureCollection, LineString } from 'src/geo/interfaces/geojson';
+import { IShapes } from './interfaces/shapes';
+import { IStops } from './interfaces/stops';
 import { CacheTtlSeconds } from 'src/constants';
 
 @Controller('geo')
@@ -26,7 +27,7 @@ export class GeoController {
     @Param('feedIndex') feedIndex: number,
     @Query('day') day?: string,
     @Query('geojson') geojson?: string,
-  ): Promise<FeatureCollection | ShapeRawData> {
+  ): Promise<FeatureCollection | IShapes> {
     return this.shapesService.findShapes({ feedIndex, day, geojson });
   }
 
@@ -48,7 +49,7 @@ export class GeoController {
     @Param('feedIndex') feedIndex: number,
     @Query('day') day?: string,
     @Query('geojson') geojson?: string,
-  ): Promise<FeatureCollection | StopRawData> {
+  ): Promise<FeatureCollection | IStops> {
     return this.stopsService.findAll({ feedIndex, day, geojson });
   }
 
