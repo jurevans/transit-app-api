@@ -6,14 +6,13 @@ import { Stops } from 'src/entities/stops.entity';
 import { Transfers } from 'src/entities/transfers.entity';
 import { RealtimeGateway } from './realtime.gateway';
 import { TripUpdatesService } from './trip-updates/trip-updates.service';
-import { StationsService } from './stations.service';
+import { StationsService } from './stations/stations.service';
 import * as redisStore from 'cache-manager-redis-store';
 import { ScheduleModule } from '@nestjs/schedule';
 import { FeedService } from './feed/feed.service';
 import { AlertsService } from './alerts/alerts.service';
 import { CacheTtlSeconds } from 'src/constants';
-import { AlertsController } from './alerts/alerts.controller';
-import { TripUpdatesController } from './trip-updates/trip-updates.controller';
+import { RealtimeController } from './realtime.controller';
 
 @Module({
   imports: [
@@ -37,6 +36,6 @@ import { TripUpdatesController } from './trip-updates/trip-updates.controller';
     FeedService,
     AlertsService,
   ],
-  controllers: [AlertsController, TripUpdatesController],
+  controllers: [RealtimeController],
 })
 export class RealtimeModule {}

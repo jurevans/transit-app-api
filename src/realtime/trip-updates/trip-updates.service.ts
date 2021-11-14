@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 //import { HttpService } from '@nestjs/axios';
 import { Cache } from 'cache-manager';
 import { DateTime } from 'luxon';
-import { StationsService } from '../stations.service';
+import { StationsService } from '../stations/stations.service';
 import { CacheKeyPrefix, CacheTtlSeconds } from 'src/constants';
 import { FeedService } from '../feed/feed.service';
 import { IIndexedStops } from '../interfaces/stations.interface';

@@ -11,7 +11,7 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { TripUpdatesService } from './trip-updates/trip-updates.service';
-import { StationsService } from './stations.service';
+import { StationsService } from './stations/stations.service';
 import { Intervals } from 'src/constants';
 import { AlertsService } from './alerts/alerts.service';
 
