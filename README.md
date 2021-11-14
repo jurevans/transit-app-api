@@ -104,17 +104,16 @@ http://localhost:5000/api/v1/docs
 ## Endpoints (Work-in-Progress)
 
 ##### Transit system data:
-- `/api/v1/agency/1/id/MTA NYCT`
-  - Get agency by `feedIndex` = `1` and `agencyId` = `MTA NYCT`
-  - Both of these parameters are required to uniquely identify the correct agency
+- `/api/v1/agency/feeds/1`
+  - Get agencies by `feedIndex` = `1`
 - `/api/v1/location/1`
   - Get center coordinates by `feedIndex` = `1`
 - `/api/v1/routes/1`
   - Get all route data by `feedIndex` = `1`
-- `/api/v1/routes/1/id/7X`
-  - Get route by ID where `feedIndex` = `1` and `routeId` = `7X`
-- `/api/v1/routes/1/trips/7X`
-  - Get trips for route identified by `feedIndex` = `1` and `routeId` = `7X`
+- `/api/v1/routes/1/trips/7`
+  - Get trips for route identified by `feedIndex` = `1` and `routeId` = `7`
+- `/api/v1/routes/1/id`
+  - Get list of all route IDs for `feedIndex` = `1`
 
 ##### Geographic data:
 - `/api/v1/geo/1/shapes`
@@ -131,13 +130,7 @@ http://localhost:5000/api/v1/docs
   - Get raw station data identified by `feedIndex` = `1` and `stationId` = `S09N`
 
 ##### GTFS Realtime data:
-- `/api/v1/gtfs/1`
-  - Get entire GTFS-realtime FeedMessage identified by `feedIndex` `1`
-  - __NOTE__: This is an impractical endpoint, and is only here for testing
-- `/api/v1/gtfs/1/location?lat=xxx&lon=xxx`
-  - __TODO__: Find nearest stations to lat/lon
-- `/api/v1/gtfs/1/route/7X`
-  - __TODO__: Find all stations by route id `7X`
-- `/api/v1/gtfs/1/stations/101N,103N,101S,203N`
-  - __TODO__: Find stations by comma-delimited list of station IDs
-
+- `/api/v1/alerts/1`
+  - Get all real-time alerts for `feedIndex` = `1`
+- `/api/v1/trip-updates/1?id=101,102,103,201,301,410`
+  - Get all real-time trip-updates for `feedIndex` = `1`, and `?id` = `101,102,103,201,301,410`. `?id` specifies a list of stops (by parent-station ID) that you want to get trip-updates for.

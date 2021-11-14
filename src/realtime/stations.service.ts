@@ -4,7 +4,7 @@ import { Stops } from 'src/entities/stops.entity';
 import { Transfers } from 'src/entities/transfers.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Cache } from 'cache-manager';
-import { getCurrentDay } from 'src/util';
+import { formatCacheKey, getCurrentDay } from 'src/util';
 import { CacheKeyPrefix, CacheTtlSeconds } from 'src/constants';
 import { IIndexedStops, ITransfers } from './interfaces/stations.interface';
 
@@ -26,7 +26,7 @@ export class StationsService {
   ) {}
 
   public async getStops(feedIndex: number): Promise<IIndexedStops> {
-    const key = `/${CacheKeyPrefix.STOPS}/${feedIndex}`;
+    const key = formatCacheKey(CacheKeyPrefix.STOPS, feedIndex);
     const stopsFromCache: IIndexedStops = await this.cacheManager.get(key);
     const today = getCurrentDay();
 

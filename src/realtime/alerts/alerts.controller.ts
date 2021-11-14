@@ -1,4 +1,4 @@
-import { CacheTTL, Controller, Get, Param } from '@nestjs/common';
+import { CacheTTL, Controller, Get, Param, ParseIntPipe } from '@nestjs/common';
 import { AlertsService } from './alerts.service';
 import { CacheTtlSeconds } from 'src/constants';
 
@@ -8,7 +8,9 @@ export class AlertsController {
 
   @Get(':feedIndex')
   @CacheTTL(CacheTtlSeconds.ONE_MINUTE)
-  async find(@Param('feedIndex') feedIndex: number): Promise<any> {
+  async find(
+    @Param('feedIndex', ParseIntPipe) feedIndex: number,
+  ): Promise<any> {
     return await this.alertsService.getAlerts(feedIndex);
   }
 }

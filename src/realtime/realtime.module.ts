@@ -13,6 +13,7 @@ import { FeedService } from './feed/feed.service';
 import { AlertsService } from './alerts/alerts.service';
 import { CacheTtlSeconds } from 'src/constants';
 import { AlertsController } from './alerts/alerts.controller';
+import { TripUpdatesController } from './trip-updates/trip-updates.controller';
 
 @Module({
   imports: [
@@ -36,6 +37,6 @@ import { AlertsController } from './alerts/alerts.controller';
     FeedService,
     AlertsService,
   ],
-  controllers: [AlertsController],
+  controllers: [AlertsController, TripUpdatesController],
 })
 export class RealtimeModule {}

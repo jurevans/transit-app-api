@@ -1,4 +1,5 @@
 import { CACHE_MANAGER, Inject, Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 //import { HttpService } from '@nestjs/axios';
 import { Cache } from 'cache-manager';
 import { DateTime } from 'luxon';
@@ -6,6 +7,7 @@ import { StationsService } from '../stations.service';
 import { CacheKeyPrefix, CacheTtlSeconds } from 'src/constants';
 import { FeedService } from '../feed/feed.service';
 import { IIndexedStops } from '../interfaces/stations.interface';
+import { getConfigByFeedIndex } from 'src/util';
 
 const MAX_MINUTES = 60;
 
@@ -19,6 +21,7 @@ export class TripUpdatesService {
     // NOTE: This would return an Observable and change the implementation
     //private readonly http: HttpService,
     private readonly feedService: FeedService,
+    private readonly configService: ConfigService,
   ) {}
 
   private _getRouteUrls(feedUrls: any[], routeIds: string[]) {
@@ -44,7 +47,12 @@ export class TripUpdatesService {
     routeIds?: string[];
   }) {
     const { feedIndex, routeIds = [] } = props;
-    const { feedUrls } = this.feedService.getConfig(feedIndex);
+    const config = getConfigByFeedIndex(
+      this.configService,
+      'gtfs-realtime',
+      feedIndex,
+    );
+    const { feedUrls } = config;
     // Which of these URLs should I use?
     const urls = this._getRouteUrls(feedUrls, routeIds);
 

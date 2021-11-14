@@ -1,3 +1,4 @@
+import { ConfigService } from '@nestjs/config';
 /**
  * Get current day of the week (e.g., 'monday', 'tuesday', etc.)
  * @returns {string}
@@ -70,3 +71,13 @@ export const formatCacheKey = (
   keyPrefix: string,
   value: string | number,
 ): string => `/${keyPrefix}/${value}`;
+
+export const getConfigByFeedIndex: any = (
+  configService: ConfigService,
+  configKey: string,
+  feedIndex: number,
+) => {
+  return configService
+    .get(configKey)
+    .find((config: any) => config.feedIndex === feedIndex);
+};

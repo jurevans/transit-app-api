@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { Cache } from 'cache-manager';
 import { FeedService } from '../feed/feed.service';
 import { CacheKeyPrefix, CacheTtlSeconds } from 'src/constants';
-import { formatCacheKey } from 'src/util';
+import { formatCacheKey, getConfigByFeedIndex } from 'src/util';
 import { IAlerts } from '../interfaces/alerts.interface';
 import { IRealtimeFeed } from '../interfaces/feed.interface';
 
@@ -17,13 +17,13 @@ export class AlertsService {
   ) {}
 
   public async getAlerts(feedIndex: number): Promise<IAlerts> {
-    const config = await this.configService
-      .get('gtfs-realtime')
-      .find((config: any) => config.feedIndex === feedIndex);
+    const config = getConfigByFeedIndex(
+      this.configService,
+      'gtfs-realtime',
+      feedIndex,
+    );
     const { serviceAlertUrl } = config;
-
     const key = formatCacheKey(CacheKeyPrefix.ALERTS, feedIndex);
-
     const alertsInCache: IAlerts = await this.cacheManager.get(key);
 
     if (alertsInCache) {
