@@ -72,6 +72,13 @@ export const formatCacheKey = (
   value: string | number,
 ): string => `/${keyPrefix}/${value}`;
 
+/**
+ * Get config from ConfigService
+ * @param configService
+ * @param configKey
+ * @param feedIndex
+ * @returns {config}
+ */
 export const getConfigByFeedIndex: any = (
   configService: ConfigService,
   configKey: string,

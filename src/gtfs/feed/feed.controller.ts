@@ -1,4 +1,4 @@
-import { CacheTTL, Controller, Get, Param } from '@nestjs/common';
+import { CacheTTL, Controller, Get, Param, ParseIntPipe } from '@nestjs/common';
 import { FeedService } from './feed.service';
 import { CacheTtlSeconds } from 'src/constants';
 import { IStaticFeed } from '../interfaces/feed.interface';
@@ -14,7 +14,9 @@ export class FeedController {
 
   @Get(':feedIndex')
   @CacheTTL(CacheTtlSeconds.ONE_DAY)
-  async findOne(@Param('feedIndex') feedIndex: number): Promise<IStaticFeed> {
+  async findOne(
+    @Param('feedIndex', ParseIntPipe) feedIndex: number,
+  ): Promise<IStaticFeed> {
     return this.feedService.findOne({ feedIndex });
   }
 }

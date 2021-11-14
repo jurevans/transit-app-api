@@ -34,6 +34,8 @@
     "@nestjs/typeorm": "^8.0.2",
     "@nestjs/websockets": "^8.2.0",
     "cache-manager-redis-store": "^2.0.0",
+    "class-transformer": "^0.4.0",
+    "class-validator": "^0.13.1",
     "luxon": "^2.1.1",
     "node-fetch": "^2.6.6",
     "passport": "^0.4.1",

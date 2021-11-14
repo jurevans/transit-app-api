@@ -3,8 +3,10 @@ import {
   Get,
   Param,
   Query,
-  NotFoundException,
   CacheTTL,
+  ParseIntPipe,
+  ParseBoolPipe,
+  DefaultValuePipe,
 } from '@nestjs/common';
 import { ShapesService } from './shapes.service';
 import { StopsService } from './stops.service';
@@ -27,44 +29,42 @@ export class GeoController {
   @Get(':feedIndex/shapes')
   @CacheTTL(CacheTtlSeconds.ONE_DAY)
   findShapes(
-    @Param('feedIndex') feedIndex: number,
+    @Param('feedIndex', ParseIntPipe) feedIndex: number,
     @Query('day') day?: string,
-    @Query('geojson') geojson?: string,
+    @Query('geojson', new DefaultValuePipe(false), ParseBoolPipe)
+    geojson?: boolean,
   ): Promise<FeatureCollection | IShape[]> {
-    return this.shapesService.findShapes({ feedIndex, day, geojson });
+    return this.shapesService.findShapes({
+      feedIndex,
+      day,
+      geojson,
+    });
   }
 
   @Get(':feedIndex/shapes/:shapeId')
-  async find(
-    @Param('feedIndex') feedIndex: number,
+  find(
+    @Param('feedIndex', ParseIntPipe) feedIndex: number,
     @Param('shapeId') shapeId: string,
   ): Promise<LineString> {
-    const shapes = await this.shapesService.find({ feedIndex, shapeId });
-    if (!shapes) {
-      throw new NotFoundException();
-    }
-    return shapes;
+    return this.shapesService.find({ feedIndex, shapeId });
   }
 
   @Get(':feedIndex/stops')
   @CacheTTL(CacheTtlSeconds.ONE_DAY)
-  async findAll(
-    @Param('feedIndex') feedIndex: number,
+  findAll(
+    @Param('feedIndex', ParseIntPipe) feedIndex: number,
     @Query('day') day?: string,
-    @Query('geojson') geojson?: string,
+    @Query('geojson', new DefaultValuePipe(false), ParseBoolPipe)
+    geojson?: boolean,
   ): Promise<FeatureCollection | IStop[]> {
     return this.stopsService.findAll({ feedIndex, day, geojson });
   }
 
   @Get(':feedIndex/stops/:stopId')
-  async findOne(
-    @Param('feedIndex') feedIndex: number,
+  findOne(
+    @Param('feedIndex', ParseIntPipe) feedIndex: number,
     @Param('stopId') stopId: string,
   ): Promise<Stops> {
-    const stop = await this.stopsService.findOne({ feedIndex, stopId });
-    if (!stop) {
-      throw new NotFoundException();
-    }
-    return stop;
+    return this.stopsService.findOne({ feedIndex, stopId });
   }
 }

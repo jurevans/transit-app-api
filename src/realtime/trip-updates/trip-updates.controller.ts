@@ -3,8 +3,9 @@ import {
   Controller,
   Get,
   Param,
-  ParseIntPipe,
   Query,
+  ParseIntPipe,
+  ParseArrayPipe,
 } from '@nestjs/common';
 import { TripUpdatesService } from './trip-updates.service';
 import { CacheTtlSeconds } from 'src/constants';
@@ -17,11 +18,8 @@ export class TripUpdatesController {
   @CacheTTL(CacheTtlSeconds.THIRTY_SECONDS)
   async find(
     @Param('feedIndex', ParseIntPipe) feedIndex: number,
-    @Query('id') stationIdString = '',
+    @Query('id', ParseArrayPipe) stationIds: string[],
   ): Promise<any> {
-    const stationIds = stationIdString
-      .split(',')
-      .map((id: string) => id.trim());
     return await this.tripUpdatesService.getTripUpdates({
       feedIndex,
       stationIds,

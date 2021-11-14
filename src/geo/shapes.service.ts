@@ -34,12 +34,13 @@ export class ShapesService {
     if (shapeData && shapeData.hasOwnProperty('line')) {
       return JSON.parse(shapeData.line);
     }
+    return null;
   }
 
   async findShapes(props: {
     feedIndex: number;
     day?: string;
-    geojson?: string;
+    geojson?: boolean;
   }): Promise<FeatureCollection | IShape[]> {
     const { feedIndex, day, geojson } = props;
     const manager = getManager();
@@ -142,7 +143,7 @@ export class ShapesService {
       FROM (${queryLinesFromStations}) AS t("routeId", "name", "longName", "color", "description", "url", "geom");
     `;
 
-    if (geojson === 'true') {
+    if (geojson) {
       const jsonBuilderShapes = await manager.query(geoJsonShapes);
       const jsonBuilderMissingShapes = await manager.query(
         geoJsonMissingShapes,
@@ -162,6 +163,9 @@ export class ShapesService {
           dataForMissingShapes = jsonBuilderMissingShapes[0].json_build_object;
         }
 
+        if (!data.features) {
+          return [];
+        }
         if (dataForMissingShapes.hasOwnProperty('features')) {
           data.features.push(...dataForMissingShapes.features);
         }
