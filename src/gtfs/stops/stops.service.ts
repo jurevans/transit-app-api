@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { getManager, Repository } from 'typeorm';
 import { Stops } from 'src/entities/stops.entity';
+import { IParentStation } from '../interfaces/stops.interface';
 
 @Injectable()
 export class StopsService {
@@ -10,7 +11,7 @@ export class StopsService {
     private stopsRepository: Repository<Stops>,
   ) {}
 
-  async findStops(props: { feedIndex: number }): Promise<Stops[]> {
+  async findStops(props: { feedIndex: number }): Promise<IParentStation[]> {
     const { feedIndex } = props;
 
     const manager = getManager();

@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import fetch from 'node-fetch';
 import * as GTFS from 'proto/gtfs-realtime';
-import { IFeed } from '../interfaces/feed';
+import { IRealtimeFeed } from '../interfaces/feed.interface';
 
 @Injectable()
 export class FeedService {
@@ -17,7 +17,7 @@ export class FeedService {
   public async getFeed(props: {
     feedIndex: number;
     endpoint: string;
-  }): Promise<IFeed> {
+  }): Promise<IRealtimeFeed> {
     const { feedIndex, endpoint } = props;
     const { accessKey } = this.getConfig(feedIndex);
     const accessKeyValue = this.configService.get(accessKey);
@@ -32,6 +32,6 @@ export class FeedService {
     const buffer = await response.buffer();
     const feedMessage = GTFS.FeedMessage.decode(buffer);
 
-    return <IFeed>GTFS.FeedMessage.toJSON(feedMessage);
+    return <IRealtimeFeed>GTFS.FeedMessage.toJSON(feedMessage);
   }
 }

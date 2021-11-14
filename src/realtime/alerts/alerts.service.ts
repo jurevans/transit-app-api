@@ -4,8 +4,8 @@ import { Cache } from 'cache-manager';
 import { FeedService } from '../feed/feed.service';
 import { CacheKeyPrefix, CacheTtlSeconds } from 'src/constants';
 import { formatCacheKey } from 'src/util';
-import { IAlerts } from '../interfaces/alerts';
-import { IFeed } from '../interfaces/feed';
+import { IAlerts } from '../interfaces/alerts.interface';
+import { IRealtimeFeed } from '../interfaces/feed.interface';
 
 @Injectable()
 export class AlertsService {
@@ -30,7 +30,7 @@ export class AlertsService {
       return alertsInCache;
     }
 
-    const feed: IFeed = await this.feedService.getFeed({
+    const feed: IRealtimeFeed = await this.feedService.getFeed({
       feedIndex,
       endpoint: serviceAlertUrl,
     });

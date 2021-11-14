@@ -5,5 +5,3 @@ export interface IRoute {
   routeDesc: string;
   routeColor: string | null;
 }
-
-export type IRoutes = IRoute[];

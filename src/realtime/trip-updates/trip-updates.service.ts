@@ -5,7 +5,7 @@ import { DateTime } from 'luxon';
 import { StationsService } from '../stations.service';
 import { CacheKeyPrefix, CacheTtlSeconds } from 'src/constants';
 import { FeedService } from '../feed/feed.service';
-import { IIndexedStops } from '../interfaces/stations';
+import { IIndexedStops } from '../interfaces/stations.interface';
 
 const MAX_MINUTES = 60;
 

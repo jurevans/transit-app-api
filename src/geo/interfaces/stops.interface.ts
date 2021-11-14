@@ -6,5 +6,3 @@ export interface IStop {
   name: string;
   the_geom: string;
 }
-
-export type IStops = IStop[];

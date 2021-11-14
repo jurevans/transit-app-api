@@ -6,7 +6,7 @@ import {
   Param,
   Query,
 } from '@nestjs/common';
-import { IRoutes } from 'src/gtfs/interfaces/routes';
+import { IRoute } from 'src/gtfs/interfaces/routes.interface';
 import { Routes } from 'src/entities/routes.entity';
 import { Trips } from 'src/entities/trips.entity';
 import { RoutesService } from './routes.service';
@@ -21,7 +21,7 @@ export class RoutesController {
   findAll(
     @Param('feedIndex') feedIndex: number,
     @Query('day') day?: string,
-  ): Promise<IRoutes> {
+  ): Promise<IRoute[]> {
     return this.routesService.findAll({ feedIndex, day });
   }
 

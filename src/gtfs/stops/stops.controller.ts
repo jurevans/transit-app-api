@@ -1,6 +1,6 @@
 import { CacheTTL, Controller, Get, Param } from '@nestjs/common';
 import { CacheTtlSeconds } from 'src/constants';
-import { Stops } from 'src/entities/stops.entity';
+import { IParentStation } from '../interfaces/stops.interface';
 import { StopsService } from './stops.service';
 
 @Controller('stops')
@@ -9,7 +9,9 @@ export class StopsController {
 
   @Get(':feedIndex')
   @CacheTTL(CacheTtlSeconds.ONE_DAY)
-  async findStops(@Param('feedIndex') feedIndex: number): Promise<Stops[]> {
+  async findStops(
+    @Param('feedIndex') feedIndex: number,
+  ): Promise<IParentStation[]> {
     return this.stopsService.findStops({ feedIndex });
   }
 

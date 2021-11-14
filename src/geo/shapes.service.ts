@@ -3,8 +3,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { getManager, Repository } from 'typeorm';
 import { ShapeGeoms } from 'src/entities/shapeGeoms.entity';
 import { getCurrentDay } from 'src/util';
-import { FeatureCollection, LineString } from 'src/geo/interfaces/geojson';
-import { IShapes } from './interfaces/shapes';
+import {
+  FeatureCollection,
+  LineString,
+} from 'src/geo/interfaces/geojson.interface';
+import { IShape } from './interfaces/shapes.interface';
 
 @Injectable()
 export class ShapesService {
@@ -37,7 +40,7 @@ export class ShapesService {
     feedIndex: number;
     day?: string;
     geojson?: string;
-  }): Promise<FeatureCollection | IShapes> {
+  }): Promise<FeatureCollection | IShape[]> {
     const { feedIndex, day, geojson } = props;
     const manager = getManager();
     const today = day || getCurrentDay();

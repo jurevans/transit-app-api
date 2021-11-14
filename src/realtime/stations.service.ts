@@ -6,7 +6,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Cache } from 'cache-manager';
 import { getCurrentDay } from 'src/util';
 import { CacheKeyPrefix, CacheTtlSeconds } from 'src/constants';
-import { IIndexedStops, ITransfers } from './interfaces/stations';
+import { IIndexedStops, ITransfers } from './interfaces/stations.interface';
 
 type IndexedStops = {
   [key: string]: any;

@@ -1,6 +1,6 @@
-import { IEntity } from './entity';
+import { IEntity } from './entity.interface';
 
-export interface IFeed {
+export interface IRealtimeFeed {
   entity: IEntity[];
   header: {
     gtfsRealtimeVersion: string;

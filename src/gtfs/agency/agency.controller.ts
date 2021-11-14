@@ -1,7 +1,7 @@
 import { CacheTTL, Controller, Get, Param } from '@nestjs/common';
 import { AgencyService } from './agency.service';
-import { Agency } from 'src/entities/agency.entity';
 import { CacheTtlSeconds } from 'src/constants';
+import { IAgency } from '../interfaces/agency.interface';
 
 @Controller('agency')
 export class AgencyController {
@@ -11,8 +11,8 @@ export class AgencyController {
   @CacheTTL(CacheTtlSeconds.ONE_DAY)
   async findOne(
     @Param('feedIndexList') feedIndexList: string,
-  ): Promise<Agency[]> {
+  ): Promise<IAgency[]> {
     const feedIndices = feedIndexList.split(',');
-    return await this.agencyService.findOne({ feedIndices });
+    return await this.agencyService.findAll({ feedIndices });
   }
 }

@@ -4,7 +4,7 @@ import { Repository } from 'typeorm';
 import { Routes } from 'src/entities/routes.entity';
 import { Trips } from 'src/entities/trips.entity';
 import { getCurrentDay } from 'src/util';
-import { IRoutes } from 'src/gtfs/interfaces/routes';
+import { IRoute } from 'src/gtfs/interfaces/routes.interface';
 
 @Injectable()
 export class RoutesService {
@@ -15,7 +15,7 @@ export class RoutesService {
     private tripsRepository: Repository<Trips>,
   ) {}
 
-  async findAll(props: { feedIndex: number; day?: string }): Promise<IRoutes> {
+  async findAll(props: { feedIndex: number; day?: string }): Promise<IRoute[]> {
     const { feedIndex, day } = props;
     const today = day || getCurrentDay();
     const routes = await this.routesRepository

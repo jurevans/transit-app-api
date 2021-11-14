@@ -7,5 +7,3 @@ export interface IShape {
   id: string | null;
   theGeom: string;
 }
-
-export type IShapes = IShape[];
