@@ -8,6 +8,7 @@ import { CacheKeyPrefix, CacheTtlSeconds } from 'src/constants';
 import { FeedService } from '../feed/feed.service';
 import { IIndexedStops } from '../interfaces/stations.interface';
 import { getConfigByFeedIndex } from 'src/util';
+import { IEndpoint } from '../interfaces/trip-updates.interface';
 
 const MAX_MINUTES = 60;
 
@@ -24,9 +25,9 @@ export class TripUpdatesService {
     private readonly configService: ConfigService,
   ) {}
 
-  private _getRouteUrls(feedUrls: any[], routeIds: string[]) {
+  private _getRouteUrls(feedUrls: IEndpoint[], routeIds: string[]) {
     return feedUrls
-      .filter((endpoint: any) => {
+      .filter((endpoint: IEndpoint) => {
         if (routeIds.length > 0 && endpoint.hasOwnProperty('routes')) {
           return endpoint.routes.some(
             (route: string) => routeIds.indexOf(route) > -1,
@@ -34,12 +35,7 @@ export class TripUpdatesService {
         }
         return true;
       })
-      .map((endpoint: any) => {
-        if (endpoint.hasOwnProperty('url')) {
-          return endpoint.url;
-        }
-        return endpoint;
-      });
+      .map((endpoint: any) => endpoint.url);
   }
 
   private async _getFeedMessage(props: {

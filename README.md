@@ -4,9 +4,7 @@ This is the backend companion to [transit-app-next](https://github.com/jurevans/
 
 This project built with [NestJS](https://nestjs.com/), [TypeORM](https://typeorm.io/) and [TypeScript](https://www.typescriptlang.org/). This project is in its infancy, and should be considered a work-in-progress! There is so much more to do.
 
-The GTFS-Realtime API endpoints are inspired by [MTAPI](https://github.com/jonthornton/MTAPI/), a Python API that exposes GTFS-Realtime protocol buffers as JSON. While `MTAPI` is specifically serving MTA (NYC) data, it serves as a good example for organizing realtime transit feed responses from a large transit system.
-
-The database that `transit-app-api` uses allows for multiple feeds to be stored simultaneously. A good use case for this would be to serve data for not only subways, but also bus routes/stops, etc. An example of this will eventually be built into this project.
+The database back-end for `transit-app-api` allows for multiple feeds to be stored simultaneously. A good use case for this would be to serve data for not only subways, but also bus routes/stops, metro trains, ferries, etc. An example of this will eventually be built into this project.
 
 ## Usage:
 
@@ -58,7 +56,11 @@ Where `gtfs.zip` is the name of the downloaded `.zip` file containing the GTFS d
 
 ## Additional environment configuration:
 
-You will need to configure the GTFS-Realtime endpoint URLs, any proto extension to the default `gtfs-realtime.proto` file, and name of the access key requested from the transit authority to authenticate these requests in `/config/gtfsRealtime.ts`:
+You will need to configure the GTFS-Realtime endpoint URLs, as well as specify the name of the access key in your `.env` config which corresponds to the value provided by the transit authority to authenticate these requests:
+
+__NOTE__: `routes: []` is optional, and is only used to determine whether we should only request only a particular URL to boost performance. If this parameter is left out, the API will query all provided URLs.
+
+__NOTE__: `proto` is currently unused and may be left out. The intention is that in the future, this API may be able to extend the default `gtfs-realtime.proto` with additional data specific to the transit authority. This is currently not implemented.
 
 ```javascript
 const gtfsRealtime = [
@@ -66,9 +68,18 @@ const gtfsRealtime = [
     feedIndex: 1,
     agencyId: 'MTA NYCT',
     feedUrls: [
-      'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs',
-      'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-ace',
-      'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-bdfm',
+      {
+        routes: ['1', '2', '3', '4', '5', '6', '7'],
+        url: 'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs',
+      },
+      {
+        routes: ['A', 'C', 'E'],
+        url: 'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-ace',
+      },
+      {
+        routes: ['B', 'D', 'F', 'M'],
+        url: 'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-bdfm',
+      },
     ],
     proto: 'nyct-subway',
     accessKey: 'GTFS_REALTIME_ACCESS_KEY',
@@ -93,7 +104,7 @@ From the 'proto/' directory:
 ```bash
 npx protoc --plugin=../node_modules/.bin/protoc-gen-ts_proto --ts_proto_out=./ ./path-to-your.proto
 ```
-`protobufjs` is required to make use of compiled protobufs, and is included in this project.
+`protobufjs` is required to make use of compiled protobufs, and is included in this project's `package.json`.
 
 ## Swagger
 Swagger is currently available at:
@@ -103,7 +114,7 @@ http://localhost:5000/api/v1/docs
 
 ## Endpoints (Work-in-Progress)
 
-##### Transit system data:
+### Transit system data:
 - `/api/v1/agency/feeds/1`
   - Get agencies by `feedIndex` = `1`
 - `/api/v1/location/1`
@@ -115,7 +126,7 @@ http://localhost:5000/api/v1/docs
 - `/api/v1/routes/1/id`
   - Get list of all route IDs for `feedIndex` = `1`
 
-##### Geographic data:
+### Geographic data:
 - `/api/v1/geo/1/shapes`
   - Get all route line shapes by `feedIndex` = `1`
 - `/api/v1/geo/1/shapes?geojson=true`
@@ -129,7 +140,7 @@ http://localhost:5000/api/v1/docs
 - `/api/v1/geo/1/stops/S09N`
   - Get raw station data identified by `feedIndex` = `1` and `stationId` = `S09N`
 
-##### GTFS Realtime data:
+### GTFS Realtime data:
 - `/api/v1/alerts/1`
   - Get all real-time alerts for `feedIndex` = `1`
 - `/api/v1/trip-updates/1?id=101,102,103,201,301,410`

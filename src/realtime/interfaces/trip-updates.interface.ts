@@ -27,3 +27,8 @@ export interface ITripUpdate {
   stopTimeUpdate: IStopTimeUpdate[];
   trip: ITrip;
 }
+
+export interface IEndpoint {
+  routes?: string[];
+  url: string;
+}
