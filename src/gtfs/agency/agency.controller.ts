@@ -6,7 +6,7 @@ import {
   ParseArrayPipe,
 } from '@nestjs/common';
 import { AgencyService } from './agency.service';
-import { CacheTtlSeconds } from 'src/constants';
+import { CacheTtlSeconds } from 'constants/';
 import { IAgency } from '../interfaces/agency.interface';
 
 @Controller('agency')

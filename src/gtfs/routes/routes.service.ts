@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Routes } from 'src/entities/routes.entity';
-import { Trips } from 'src/entities/trips.entity';
-import { getCurrentDay } from 'src/util';
-import { IRoute } from 'src/gtfs/interfaces/routes.interface';
+import { Routes } from 'entities/routes.entity';
+import { Trips } from 'entities/trips.entity';
+import { getCurrentDay } from 'util/';
+import { IRoute } from 'gtfs/interfaces/routes.interface';
 
 @Injectable()
 export class RoutesService {

@@ -1,11 +1,11 @@
 import { CACHE_MANAGER, Inject, Injectable } from '@nestjs/common';
 import { Repository, getManager } from 'typeorm';
-import { Stops } from 'src/entities/stops.entity';
-import { Transfers } from 'src/entities/transfers.entity';
+import { Stops } from 'entities/stops.entity';
+import { Transfers } from 'entities/transfers.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Cache } from 'cache-manager';
-import { formatCacheKey, getCurrentDay } from 'src/util';
-import { CacheKeyPrefix, CacheTtlSeconds } from 'src/constants';
+import { formatCacheKey, getCurrentDay } from 'util/';
+import { CacheKeyPrefix, CacheTtlSeconds } from 'constants/';
 import { IIndexedStops, ITransfers } from '../interfaces/stations.interface';
 
 type IndexedStops = {

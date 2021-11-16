@@ -8,11 +8,11 @@ import { LocationService } from './location/location.service';
 import { LocationController } from './location/location.controller';
 import { FeedService } from './feed/feed.service';
 import { FeedController } from './feed/feed.controller';
-import { Routes } from 'src/entities/routes.entity';
-import { Trips } from 'src/entities/trips.entity';
-import { Agency } from 'src/entities/agency.entity';
-import { FeedInfo } from 'src/entities/feedInfo.entity';
-import { Stops } from 'src/entities/stops.entity';
+import { Routes } from 'entities/routes.entity';
+import { Trips } from 'entities/trips.entity';
+import { Agency } from 'entities/agency.entity';
+import { FeedInfo } from 'entities/feedInfo.entity';
+import { Stops } from 'entities/stops.entity';
 import { StopsService } from './stops/stops.service';
 import { StopsController } from './stops/stops.controller';
 

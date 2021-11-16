@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { getManager, Repository } from 'typeorm';
-import { ShapeGeoms } from 'src/entities/shapeGeoms.entity';
-import { getCurrentDay } from 'src/util';
+import { ShapeGeoms } from 'entities/shapeGeoms.entity';
+import { getCurrentDay } from 'util/';
 import {
   FeatureCollection,
   LineString,
-} from 'src/geo/interfaces/geojson.interface';
+} from 'geo/interfaces/geojson.interface';
 import { IShape } from './interfaces/shapes.interface';
 
 @Injectable()

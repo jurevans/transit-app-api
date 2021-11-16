@@ -10,14 +10,14 @@ import {
 } from '@nestjs/common';
 import { ShapesService } from './shapes.service';
 import { StopsService } from './stops.service';
-import { Stops } from 'src/entities/stops.entity';
+import { Stops } from 'entities/stops.entity';
 import {
   FeatureCollection,
   LineString,
-} from 'src/geo/interfaces/geojson.interface';
+} from 'geo/interfaces/geojson.interface';
 import { IShape } from './interfaces/shapes.interface';
 import { IStop } from './interfaces/stops.interface';
-import { CacheTtlSeconds } from 'src/constants';
+import { CacheTtlSeconds } from 'constants/';
 
 @Controller('geo')
 export class GeoController {

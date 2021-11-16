@@ -2,8 +2,8 @@ import { CACHE_MANAGER, Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Cache } from 'cache-manager';
 import { FeedService } from '../feed/feed.service';
-import { CacheKeyPrefix, CacheTtlSeconds } from 'src/constants';
-import { formatCacheKey, getConfigByFeedIndex } from 'src/util';
+import { CacheKeyPrefix, CacheTtlSeconds } from 'constants/';
+import { formatCacheKey, getConfigByFeedIndex } from 'util/';
 import { IAlerts } from '../interfaces/alerts.interface';
 import { IRealtimeFeed } from '../interfaces/feed.interface';
 

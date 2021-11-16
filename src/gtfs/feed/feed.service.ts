@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { FeedInfo } from 'src/entities/feedInfo.entity';
+import { FeedInfo } from 'entities/feedInfo.entity';
 import { IStaticFeed } from '../interfaces/feed.interface';
 
 @Injectable()

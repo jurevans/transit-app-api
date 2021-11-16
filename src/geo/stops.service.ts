@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { getManager, Repository } from 'typeorm';
-import { Stops } from 'src/entities/stops.entity';
-import { getCurrentDay } from 'src/util';
+import { Stops } from 'entities/stops.entity';
+import { getCurrentDay } from 'util/';
 
 @Injectable()
 export class StopsService {

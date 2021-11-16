@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import fetch from 'node-fetch';
-import * as GTFS from 'proto/gtfs-realtime';
-import { getConfigByFeedIndex } from 'src/util';
+import * as GTFS from '../../../proto/gtfs-realtime';
+import { getConfigByFeedIndex } from 'util/';
 import { IRealtimeFeed } from '../interfaces/feed.interface';
 
 @Injectable()

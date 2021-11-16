@@ -1,5 +1,5 @@
 import { CacheTTL, Controller, Get, Param, ParseIntPipe } from '@nestjs/common';
-import { CacheTtlSeconds } from 'src/constants';
+import { CacheTtlSeconds } from 'constants/';
 import { ILocation } from '../interfaces/location.interface';
 import { LocationService } from './location.service';
 

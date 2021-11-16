@@ -12,7 +12,7 @@ import {
 import { Server, Socket } from 'socket.io';
 import { TripUpdatesService } from './trip-updates/trip-updates.service';
 import { StationsService } from './stations/stations.service';
-import { Intervals } from 'src/constants';
+import { Intervals } from 'constants/';
 import { AlertsService } from './alerts/alerts.service';
 
 @WebSocketGateway({ cors: true })

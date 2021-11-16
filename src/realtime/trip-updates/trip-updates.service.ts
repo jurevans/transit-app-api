@@ -4,11 +4,11 @@ import { ConfigService } from '@nestjs/config';
 import { Cache } from 'cache-manager';
 import { DateTime } from 'luxon';
 import { StationsService } from '../stations/stations.service';
-import { CacheKeyPrefix, CacheTtlSeconds } from 'src/constants';
 import { FeedService } from '../feed/feed.service';
 import { IIndexedStops } from '../interfaces/stations.interface';
-import { getConfigByFeedIndex } from 'src/util';
 import { IEndpoint } from '../interfaces/trip-updates.interface';
+import { CacheKeyPrefix, CacheTtlSeconds } from 'constants/';
+import { getConfigByFeedIndex } from 'util/';
 
 const MAX_MINUTES = 60;
 

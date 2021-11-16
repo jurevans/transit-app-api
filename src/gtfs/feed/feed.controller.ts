@@ -1,6 +1,6 @@
 import { CacheTTL, Controller, Get, Param, ParseIntPipe } from '@nestjs/common';
 import { FeedService } from './feed.service';
-import { CacheTtlSeconds } from 'src/constants';
+import { CacheTtlSeconds } from 'constants/';
 import { IStaticFeed } from '../interfaces/feed.interface';
 
 @Controller('feed')

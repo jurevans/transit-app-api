@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { getManager, Repository } from 'typeorm';
-import { Stops } from 'src/entities/stops.entity';
+import { Stops } from 'entities/stops.entity';
 import { IParentStation } from '../interfaces/stops.interface';
 
 @Injectable()
