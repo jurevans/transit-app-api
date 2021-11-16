@@ -47,7 +47,7 @@ export class FareAttributes {
 
   @ManyToOne(
     () => PaymentMethods,
-    (paymentMethods) => paymentMethods.fareAttributes
+    (paymentMethods) => paymentMethods.fareAttributes,
   )
   @JoinColumn([
     { name: 'payment_method', referencedColumnName: 'paymentMethod' },

@@ -1,4 +1,10 @@
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { Calendar } from './calendar.entity';
 import { FareAttributes } from './fareAttributes.entity';
 import { FeedInfo } from './feedInfo.entity';

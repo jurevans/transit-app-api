@@ -3,8 +3,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { getManager, Repository } from 'typeorm';
 import { ShapeGeoms } from 'src/entities/shapeGeoms.entity';
 import { getCurrentDay } from 'src/util';
-import { FeatureCollection, LineString } from 'src/interfaces/geojson';
-import { ShapeRawData } from 'src/interfaces/data';
+import {
+  FeatureCollection,
+  LineString,
+} from 'src/geo/interfaces/geojson.interface';
+import { IShape } from './interfaces/shapes.interface';
 
 @Injectable()
 export class ShapesService {
@@ -14,9 +17,9 @@ export class ShapesService {
   ) {}
 
   async find(props: {
-    feedIndex: number,
-    shapeId: string,
-   }): Promise<LineString> {
+    feedIndex: number;
+    shapeId: string;
+  }): Promise<LineString> {
     const { feedIndex, shapeId } = props;
     const shapeData = await this.shapeGeomsRepository
       .createQueryBuilder('shapeGeoms')
@@ -31,13 +34,14 @@ export class ShapesService {
     if (shapeData && shapeData.hasOwnProperty('line')) {
       return JSON.parse(shapeData.line);
     }
+    return null;
   }
 
   async findShapes(props: {
-    feedIndex: number,
-    day?: string,
-    geojson?: string,
-  }): Promise<FeatureCollection | ShapeRawData> {
+    feedIndex: number;
+    day?: string;
+    geojson?: boolean;
+  }): Promise<FeatureCollection | IShape[]> {
     const { feedIndex, day, geojson } = props;
     const manager = getManager();
     const today = day || getCurrentDay();
@@ -74,7 +78,7 @@ export class ShapesService {
 
     // For any routes missing Shapes, generate LineString geometry
     // using station locations:
-    // TODO: These queries should be run one time, generating a new 
+    // TODO: These queries should be run one time, generating a new
     // table that we can access via ORM. Perhaps this should be a required,
     // one-time migration?
     const withNullShapesQuery = `
@@ -139,18 +143,29 @@ export class ShapesService {
       FROM (${queryLinesFromStations}) AS t("routeId", "name", "longName", "color", "description", "url", "geom");
     `;
 
-    if (geojson === 'true') {
+    if (geojson) {
       const jsonBuilderShapes = await manager.query(geoJsonShapes);
-      const jsonBuilderMissingShapes = await manager.query(geoJsonMissingShapes);
+      const jsonBuilderMissingShapes = await manager.query(
+        geoJsonMissingShapes,
+      );
 
-      if (jsonBuilderShapes.length > 0 && jsonBuilderShapes[0].hasOwnProperty('json_build_object')) {
+      if (
+        jsonBuilderShapes.length > 0 &&
+        jsonBuilderShapes[0].hasOwnProperty('json_build_object')
+      ) {
         const data = jsonBuilderShapes[0].json_build_object;
         let dataForMissingShapes: FeatureCollection;
 
-        if (jsonBuilderMissingShapes.length > 0 && jsonBuilderMissingShapes[0].hasOwnProperty('json_build_object')) {
+        if (
+          jsonBuilderMissingShapes.length > 0 &&
+          jsonBuilderMissingShapes[0].hasOwnProperty('json_build_object')
+        ) {
           dataForMissingShapes = jsonBuilderMissingShapes[0].json_build_object;
         }
 
+        if (!data.features) {
+          return [];
+        }
         if (dataForMissingShapes.hasOwnProperty('features')) {
           data.features.push(...dataForMissingShapes.features);
         }
@@ -161,9 +176,6 @@ export class ShapesService {
     const responseShapes = await manager.query(queryRoutesWithShapes);
     const responseMissingShapes = await manager.query(queryLinesFromStations);
 
-    return [
-      ...responseShapes,
-      ...responseMissingShapes,
-    ];
+    return [...responseShapes, ...responseMissingShapes];
   }
 }

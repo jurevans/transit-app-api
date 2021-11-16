@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { getManager, IsNull, Repository } from 'typeorm';
+import { getManager, Repository } from 'typeorm';
 import { Stops } from 'src/entities/stops.entity';
+import { IParentStation } from '../interfaces/stops.interface';
 
 @Injectable()
 export class StopsService {
@@ -10,7 +11,7 @@ export class StopsService {
     private stopsRepository: Repository<Stops>,
   ) {}
 
-  async findStops(props: { feedIndex: number }): Promise<Stops[]> {
+  async findStops(props: { feedIndex: number }): Promise<IParentStation[]> {
     const { feedIndex } = props;
 
     const manager = getManager();
@@ -30,8 +31,7 @@ export class StopsService {
       LEFT JOIN
       trips t
       ON t.trip_id = st.trip_id
-      WHERE s.feed_index = ${feedIndex}`
-    );
+      WHERE s.feed_index = ${feedIndex}`);
 
     const parentStations = await this.stopsRepository
       .createQueryBuilder('s')
@@ -47,10 +47,12 @@ export class StopsService {
 
     parentStations.forEach((station: any) => {
       station.stops = {};
-      const stopsForStation = stops.filter((stop: any) => stop.parentStation === station.stopId);
+      const stopsForStation = stops.filter(
+        (stop: any) => stop.parentStation === station.stopId,
+      );
       stopsForStation.forEach((stop: any) => {
         station.stops[stop.stopId] = stop;
-      })
+      });
     });
 
     return parentStations;
@@ -82,5 +84,4 @@ export class StopsService {
       return obj;
     }, {});
   }
-
 }

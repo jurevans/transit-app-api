@@ -4,7 +4,7 @@ import { Repository } from 'typeorm';
 import { Routes } from 'src/entities/routes.entity';
 import { Trips } from 'src/entities/trips.entity';
 import { getCurrentDay } from 'src/util';
-import { RouteRawData } from 'src/interfaces/data';
+import { IRoute } from 'src/gtfs/interfaces/routes.interface';
 
 @Injectable()
 export class RoutesService {
@@ -15,10 +15,7 @@ export class RoutesService {
     private tripsRepository: Repository<Trips>,
   ) {}
 
-  async findAll(props: {
-    feedIndex: number,
-    day?: string,
-  }): Promise<RouteRawData> {
+  async findAll(props: { feedIndex: number; day?: string }): Promise<IRoute[]> {
     const { feedIndex, day } = props;
     const today = day || getCurrentDay();
     const routes = await this.routesRepository
@@ -43,9 +40,9 @@ export class RoutesService {
   }
 
   async findOne(params: {
-    feedIndex: number,
-    routeId: string,
-    day?: string,
+    feedIndex: number;
+    routeId: string;
+    day?: string;
   }): Promise<Routes> {
     const { feedIndex, routeId, day } = params;
     const today = day || getCurrentDay();
@@ -69,11 +66,7 @@ export class RoutesService {
     return routes;
   }
 
-  async findTrips(props: {
-    feedIndex: number,
-    routeId: string,
-    day: string,
-  }) {
+  async findTrips(props: { feedIndex: number; routeId: string; day: string }) {
     const { feedIndex, routeId, day } = props;
     const today = day || getCurrentDay();
 
@@ -88,10 +81,10 @@ export class RoutesService {
     return trips;
   }
 
-  async findRouteIds(props: { feedIndex: number}): Promise<any> {
+  async findRouteIds(props: { feedIndex: number }): Promise<any> {
     const { feedIndex } = props;
     const routeIdsResults = await this.routesRepository.find({
-      select: [ 'routeId'],
+      select: ['routeId'],
       where: { feedIndex },
     });
     return routeIdsResults.map((routeIdResult: any) => routeIdResult.routeId);

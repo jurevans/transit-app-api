@@ -1,4 +1,11 @@
-import { Column, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  Index,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { ExceptionTypes } from './exceptionTypes.entity';
 import { Calendar } from './calendar.entity';
 
@@ -13,7 +20,7 @@ export class CalendarDates {
 
   @ManyToOne(
     () => ExceptionTypes,
-    (exceptionTypes) => exceptionTypes.calendarDates
+    (exceptionTypes) => exceptionTypes.calendarDates,
   )
   @JoinColumn([
     { name: 'exception_type', referencedColumnName: 'exceptionType' },

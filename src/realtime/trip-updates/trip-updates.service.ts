@@ -1,10 +1,14 @@
 import { CACHE_MANAGER, Inject, Injectable } from '@nestjs/common';
-import { HttpService } from '@nestjs/axios';
+import { ConfigService } from '@nestjs/config';
+//import { HttpService } from '@nestjs/axios';
 import { Cache } from 'cache-manager';
 import { DateTime } from 'luxon';
-import { StationsService } from '../stations.service';
+import { StationsService } from '../stations/stations.service';
 import { CacheKeyPrefix, CacheTtlSeconds } from 'src/constants';
 import { FeedService } from '../feed/feed.service';
+import { IIndexedStops } from '../interfaces/stations.interface';
+import { getConfigByFeedIndex } from 'src/util';
+import { IEndpoint } from '../interfaces/trip-updates.interface';
 
 const MAX_MINUTES = 60;
 
@@ -14,52 +18,65 @@ export class TripUpdatesService {
     @Inject(CACHE_MANAGER)
     private readonly cacheManager: Cache,
     private readonly stationsService: StationsService,
-    private readonly http: HttpService,
+    // TODO: Is it worth utilizing HttpService?
+    // NOTE: This would return an Observable and change the implementation
+    //private readonly http: HttpService,
     private readonly feedService: FeedService,
+    private readonly configService: ConfigService,
   ) {}
 
-  private _getRouteUrls(feedUrls: any[], routeIds: string[]) {
+  private _getRouteUrls(feedUrls: IEndpoint[], routeIds: string[]) {
     return feedUrls
-      .filter((endpoint: any) => {
-        if (routeIds.length > 0
-            && endpoint.hasOwnProperty('routes')) {
-          return endpoint.routes.some((route: string) => routeIds.indexOf(route) > -1);
+      .filter((endpoint: IEndpoint) => {
+        if (routeIds.length > 0 && endpoint.hasOwnProperty('routes')) {
+          return endpoint.routes.some(
+            (route: string) => routeIds.indexOf(route) > -1,
+          );
         }
         return true;
       })
-      .map((endpoint: any) => {
-        if (endpoint.hasOwnProperty('url')) {
-          return endpoint.url;
-        }
-        return endpoint;
-      });
+      .map((endpoint: any) => endpoint.url);
   }
 
   private async _getFeedMessage(props: {
-    feedIndex: number,
-    routeIds?: string[],
+    feedIndex: number;
+    routeIds?: string[];
   }) {
     const { feedIndex, routeIds = [] } = props;
-    const { feedUrls } = this.feedService.getConfig(feedIndex);
+    const config = getConfigByFeedIndex(
+      this.configService,
+      'gtfs-realtime',
+      feedIndex,
+    );
+    const { feedUrls } = config;
     // Which of these URLs should I use?
     const urls = this._getRouteUrls(feedUrls, routeIds);
 
     // Add the following fetches to a queue instead?
-    return Promise.all(urls.map(async (endpoint: string) => {
-      // Check Redis for cached response:
-      const feedMessageInCache = await this.cacheManager.get(endpoint);
-      if (feedMessageInCache) {
-        return feedMessageInCache;
-      }
+    return Promise.all(
+      urls.map(async (endpoint: string) => {
+        // Check Redis for cached response:
+        const feedMessageInCache = await this.cacheManager.get(endpoint);
+        if (feedMessageInCache) {
+          return feedMessageInCache;
+        }
 
-      const feedMessage = await this.feedService.getFeed({ feedIndex, endpoint });
-      await this.cacheManager.set(endpoint, feedMessage, { ttl: CacheTtlSeconds.THIRTY_SECONDS })
-      return await this.cacheManager.get(endpoint);
-    }));
+        const feedMessage = await this.feedService.getFeed({
+          feedIndex,
+          endpoint,
+        });
+        await this.cacheManager.set(endpoint, feedMessage, {
+          ttl: CacheTtlSeconds.THIRTY_SECONDS,
+        });
+        return await this.cacheManager.get(endpoint);
+      }),
+    );
   }
 
   private _getTripUpdateEntities(feedMessage: any) {
-    return feedMessage.entity.filter((entity: any) => entity.hasOwnProperty('tripUpdate'));
+    return feedMessage.entity.filter((entity: any) =>
+      entity.hasOwnProperty('tripUpdate'),
+    );
   }
 
   private static _collectRouteIds(stopTimeUpdates: any) {
@@ -74,12 +91,12 @@ export class TripUpdatesService {
   }
 
   private async _getStopTimeUpdates(props: {
-    feedIndex: number,
-    entities: any[],
-    stopIds: string[],
+    feedIndex: number;
+    entities: any[];
+    stopIds: string[];
   }) {
     const { feedIndex, entities, stopIds } = props;
-    // TODO: We need to pull the timezone from Agency:
+    // TODO: We need to pull the timezone from the Agency table:
     const now = DateTime.now().toSeconds();
     const vehicles = [];
     const key = `/${CacheKeyPrefix.VEHICLES}/${stopIds.join(',')}`;
@@ -100,10 +117,11 @@ export class TripUpdatesService {
         }
         const { stopId, arrival } = update;
         const { time, delay } = arrival;
-        if (stopIds.indexOf(update.stopId) > -1
-          && time > now
-          && time < (now + (MAX_MINUTES * 60))) {
-
+        if (
+          stopIds.indexOf(update.stopId) > -1 &&
+          time > now &&
+          time < now + MAX_MINUTES * 60
+        ) {
           const { headsign } = indexedStops[stopId];
           vehicles.push({
             stopId,
@@ -117,25 +135,29 @@ export class TripUpdatesService {
       });
     });
 
-    vehicles.sort((a: any, b: any) => (a.time < b.time) ? -1 : 1);
-    await this.cacheManager.set(key, vehicles, { ttl: CacheTtlSeconds.THIRTY_SECONDS });
+    vehicles.sort((a: any, b: any) => (a.time < b.time ? -1 : 1));
+    await this.cacheManager.set(key, vehicles, {
+      ttl: CacheTtlSeconds.THIRTY_SECONDS,
+    });
     return await this.cacheManager.get(key);
   }
 
   public async getTripUpdates(props: {
-    feedIndex: number,
-    stationIds: string[],
+    feedIndex: number;
+    stationIds: string[];
   }) {
     const { feedIndex, stationIds = [] } = props;
 
-    const allStops = await this.stationsService.getStops(feedIndex);
+    const allStops: IIndexedStops = await this.stationsService.getStops(
+      feedIndex,
+    );
     const stops = stationIds.reduce((stops: any[], stationId: string) => {
       stops = [
         ...stops,
         ...Object.keys(allStops)
           .filter((key: any) => allStops[key].parentStation === stationId)
           .map((key: string) => allStops[key]),
-      ]
+      ];
       return stops;
     }, []);
 
@@ -158,16 +180,19 @@ export class TripUpdatesService {
       id: string;
       tripUpdate: {
         stopTimeUpdate: any[];
-      }
+      };
     };
 
-    const entities: any = feedMessages.reduce((acc: Entity[], feedMessage) => {
-      const tripUpdates = this._getTripUpdateEntities(feedMessage);
-      if (tripUpdates.length > 0) {
-        acc = [ ...acc, ...tripUpdates];
-        return acc;
-      }
-    }, []);
+    const entities: any = feedMessages.reduce(
+      (entities: Entity[], feedMessage) => {
+        const tripUpdates = this._getTripUpdateEntities(feedMessage);
+        if (tripUpdates.length > 0) {
+          entities = [...entities, ...tripUpdates];
+          return entities;
+        }
+      },
+      [],
+    );
 
     const stopTimeUpdates = await this._getStopTimeUpdates({
       feedIndex,
@@ -175,7 +200,8 @@ export class TripUpdatesService {
       stopIds,
     });
 
-    const routeIdsFromStops = TripUpdatesService._collectRouteIds(stopTimeUpdates);
+    const routeIdsFromStops =
+      TripUpdatesService._collectRouteIds(stopTimeUpdates);
     return {
       routeIds: routeIdsFromStops,
       stopTimeUpdates,

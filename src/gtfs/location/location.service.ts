@@ -1,9 +1,11 @@
 import { getManager } from 'typeorm';
+import { ILocation } from '../interfaces/location.interface';
 
 export class LocationService {
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   constructor() {}
 
-  async findLocation(params: { feedIndex: number }) {
+  async findLocation(params: { feedIndex: number }): Promise<ILocation> {
     const { feedIndex } = params;
     const manager = getManager();
     const locationResults = await manager.query(`

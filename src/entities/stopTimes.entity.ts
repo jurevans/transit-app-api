@@ -54,7 +54,7 @@ export class StopTimes {
 
   @ManyToOne(
     () => ContinuousPickup,
-    (continuousPickup) => continuousPickup.stopTimes
+    (continuousPickup) => continuousPickup.stopTimes,
   )
   @JoinColumn([
     { name: 'continuous_pickup', referencedColumnName: 'continuousPickup' },
@@ -63,7 +63,7 @@ export class StopTimes {
 
   @ManyToOne(
     () => PickupDropoffTypes,
-    (pickupDropoffTypes) => pickupDropoffTypes.stopTimes
+    (pickupDropoffTypes) => pickupDropoffTypes.stopTimes,
   )
   @JoinColumn([{ name: 'drop_off_type', referencedColumnName: 'typeId' }])
   dropOffType: PickupDropoffTypes;
@@ -90,7 +90,7 @@ export class StopTimes {
 
   @ManyToOne(
     () => PickupDropoffTypes,
-    (pickupDropoffTypes) => pickupDropoffTypes.stopTimes2
+    (pickupDropoffTypes) => pickupDropoffTypes.stopTimes2,
   )
   @JoinColumn([{ name: 'pickup_type', referencedColumnName: 'typeId' }])
   pickupType: PickupDropoffTypes;

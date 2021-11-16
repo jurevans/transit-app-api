@@ -1,4 +1,10 @@
-import { CacheInterceptor, CacheModule, CacheModuleOptions, MiddlewareConsumer, Module } from '@nestjs/common';
+import {
+  CacheInterceptor,
+  CacheModule,
+  CacheModuleOptions,
+  MiddlewareConsumer,
+  Module,
+} from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { TerminusModule } from '@nestjs/terminus';
@@ -7,9 +13,8 @@ import { Connection, getConnectionOptions } from 'typeorm';
 import * as redisStore from 'cache-manager-redis-store';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { GtfsModule } from './gtfs/gtfs.module';
 import { GeoModule } from './geo/geo.module';
-import { TransitModule } from './transit/transit.module';
+import { GTFSModule } from './gtfs/gtfs.module';
 import { HealthController } from './health/health.controller';
 import { AuthMiddleware } from './middleware/auth.middleware';
 import { AuthModule } from './auth/auth.module';
@@ -35,24 +40,22 @@ import { CacheTtlSeconds } from './constants';
       inject: [ConfigService],
     }),
     TypeOrmModule.forRootAsync({
-      useFactory: async (configService: ConfigService): Promise<TypeOrmModuleAsyncOptions> =>
+      useFactory: async (
+        configService: ConfigService,
+      ): Promise<TypeOrmModuleAsyncOptions> =>
         Object.assign(await getConnectionOptions(), {
           ...configService.get('database'),
           autoLoadEntities: true,
         }),
-        inject: [ConfigService],
+      inject: [ConfigService],
     }),
-    GtfsModule,
     GeoModule,
-    TransitModule,
+    GTFSModule,
     TerminusModule,
     AuthModule,
     RealtimeModule,
   ],
-  controllers: [
-    AppController,
-    HealthController,
-  ],
+  controllers: [AppController, HealthController],
   providers: [
     {
       provide: APP_INTERCEPTOR,

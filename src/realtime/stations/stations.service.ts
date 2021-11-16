@@ -4,8 +4,9 @@ import { Stops } from 'src/entities/stops.entity';
 import { Transfers } from 'src/entities/transfers.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Cache } from 'cache-manager';
-import { getCurrentDay } from 'src/util';
+import { formatCacheKey, getCurrentDay } from 'src/util';
 import { CacheKeyPrefix, CacheTtlSeconds } from 'src/constants';
+import { IIndexedStops, ITransfers } from '../interfaces/stations.interface';
 
 type IndexedStops = {
   [key: string]: any;
@@ -24,9 +25,9 @@ export class StationsService {
     private readonly cacheManager: Cache,
   ) {}
 
-  public async getStops(feedIndex: number) {
-    const key = `/${CacheKeyPrefix.STOPS}/${feedIndex}`;
-    const stopsFromCache = await this.cacheManager.get(key);
+  public async getStops(feedIndex: number): Promise<IIndexedStops> {
+    const key = formatCacheKey(CacheKeyPrefix.STOPS, feedIndex);
+    const stopsFromCache: IIndexedStops = await this.cacheManager.get(key);
     const today = getCurrentDay();
 
     if (stopsFromCache) {
@@ -50,21 +51,25 @@ export class StationsService {
       INNER JOIN calendar cal
       ON cal.service_id = t.service_id
       WHERE s.feed_index = ${feedIndex}
-        AND cal.${today} = 1`
+        AND cal.${today} = 1`);
+
+    const indexedStops: IndexedStops = stops.reduce(
+      (indexed: IndexedStops, stop: Stops) => {
+        indexed[stop.stopId] = stop;
+        return indexed;
+      },
+      {},
     );
 
-    const indexedStops: IndexedStops = stops.reduce((indexed: IndexedStops, stop: Stops) => {
-      indexed[stop.stopId] = stop;
-      return indexed;
-    }, {});
-
-    await this.cacheManager.set(key, indexedStops, { ttl: CacheTtlSeconds.ONE_DAY });
+    await this.cacheManager.set(key, indexedStops, {
+      ttl: CacheTtlSeconds.ONE_DAY,
+    });
     return this.cacheManager.get(key);
   }
 
-  public async getTransfers(feedIndex: number) {
+  public async getTransfers(feedIndex: number): Promise<ITransfers> {
     const key = `/${CacheKeyPrefix.TRANSFERS}/${feedIndex}`;
-    const transfersFromCache = await this.cacheManager.get(key);
+    const transfersFromCache: ITransfers = await this.cacheManager.get(key);
 
     if (transfersFromCache) {
       return transfersFromCache;
@@ -75,13 +80,16 @@ export class StationsService {
       where: { feedIndex },
     });
 
-    const indexedTransfers: IndexedTransfers = transfers.reduce((indexed: IndexedTransfers, transfer: Transfers) => {
-      if (!indexed[transfer.fromStopId]) {
-        indexed[transfer.fromStopId] = [];
-      }
-      indexed[transfer.fromStopId].push(transfer.toStopId);
-      return indexed;
-    }, {});
+    const indexedTransfers: IndexedTransfers = transfers.reduce(
+      (indexed: IndexedTransfers, transfer: Transfers) => {
+        if (!indexed[transfer.fromStopId]) {
+          indexed[transfer.fromStopId] = [];
+        }
+        indexed[transfer.fromStopId].push(transfer.toStopId);
+        return indexed;
+      },
+      {},
+    );
 
     await this.cacheManager.set(key, indexedTransfers, { ttl: 0 });
     return this.cacheManager.get(key);

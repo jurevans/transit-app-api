@@ -4,13 +4,12 @@ This is the backend companion to [transit-app-next](https://github.com/jurevans/
 
 This project built with [NestJS](https://nestjs.com/), [TypeORM](https://typeorm.io/) and [TypeScript](https://www.typescriptlang.org/). This project is in its infancy, and should be considered a work-in-progress! There is so much more to do.
 
-The GTFS-Realtime API endpoints are inspired by [MTAPI](https://github.com/jonthornton/MTAPI/), a Python API that exposes GTFS-Realtime protocol buffers as JSON. While `MTAPI` is specifically serving MTA (NYC) data, it serves as a good example for organizing realtime transit feed responses from a large transit system.
-
-The database that `transit-app-api` uses allows for multiple feeds to be stored simultaneously. A good use case for this would be to serve data for not only subways, but also bus routes/stops, etc. An example of this will eventually be built into this project.
+The database back-end for `transit-app-api` allows for multiple feeds to be stored simultaneously. A good use case for this would be to serve data for not only subways, but also bus routes/stops, metro trains, ferries, etc. An example of this will eventually be built into this project.
 
 ## Usage:
 
 Run:
+
 ```bash
 npm run start:dev
 ```
@@ -18,6 +17,7 @@ npm run start:dev
 Api is available at `http://localhost:5000/api/v1/`. Swagger documentation is enabled at `http://localhost:5000/api/v1/docs/`, though this is presently minimal while the api is being hashed out. The appropriate decorators from `@nestjs/swagger` will be implemented once this becomes stable.
 
 ## Connect to Redis
+
 This application uses Redis for caching and session management, which can be configured in `.env`:
 
 ```bash
@@ -27,6 +27,7 @@ REDIS_AUTH=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 ```
 
 ## Connect to a database
+
 Example `.env` configuration:
 
 ```bash
@@ -42,23 +43,31 @@ This project depends on a PostgrSQL database populated using the gtfs-sql-import
 Basic usage is as follows (executed from within the repo):
 
 Export the following environment variables:
+
 ```bash
 PGDATABASE=mydbname
 PGHOST=example.com
 PGUSER=username
 ```
-(__NOTE__: You may need to export `PGPASSWORD=password` if not otherwise authenticated to use `psql`).
+
+(**NOTE**: You may need to export `PGPASSWORD=password` if not otherwise authenticated to use `psql`).
 
 Then:
+
 ```bash
 make init
 make load GTFS=gtfs.zip
 ```
+
 Where `gtfs.zip` is the name of the downloaded `.zip` file containing the GTFS data.
 
 ## Additional environment configuration:
 
-You will need to configure the GTFS-Realtime endpoint URLs, any proto extension to the default `gtfs-realtime.proto` file, and name of the access key requested from the transit authority to authenticate these requests in `/config/gtfsRealtime.ts`:
+You will need to configure the GTFS-Realtime endpoint URLs, as well as specify the name of the access key in your `.env` config which corresponds to the value provided by the transit authority to authenticate these requests:
+
+**NOTE**: `routes: []` is optional, and is only used to determine whether we should only request only a particular URL to boost performance. If this parameter is left out, the API will query all provided URLs.
+
+**NOTE**: `proto` is currently unused and may be left out. The intention is that in the future, this API may be able to extend the default `gtfs-realtime.proto` with additional data specific to the transit authority. This is currently not implemented.
 
 ```javascript
 const gtfsRealtime = [
@@ -66,9 +75,18 @@ const gtfsRealtime = [
     feedIndex: 1,
     agencyId: 'MTA NYCT',
     feedUrls: [
-      'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs',
-      'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-ace',
-      'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-bdfm',
+      {
+        routes: ['1', '2', '3', '4', '5', '6', '7'],
+        url: 'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs',
+      },
+      {
+        routes: ['A', 'C', 'E'],
+        url: 'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-ace',
+      },
+      {
+        routes: ['B', 'D', 'F', 'M'],
+        url: 'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-bdfm',
+      },
     ],
     proto: 'nyct-subway',
     accessKey: 'GTFS_REALTIME_ACCESS_KEY',
@@ -87,36 +105,44 @@ You will need a unique access key for each group of feed endpoints you want to a
 The `proto` string refers to a complied `.proto` file that is an extension of the base `gtfs-realtime.proto`, in this case, `nyct-subway.proto`. This gets dynamically loaded should it appear in the config, however, making use of the additional bindings it provides is still in the works.
 
 ## .proto compiling
+
 If you have the protobuf-compiler installed (`protoc`), and have a specific `.proto` file you wish to use in addition to `gtfs-realtime.proto`, this can be generated as follows:
 
 From the 'proto/' directory:
+
 ```bash
 npx protoc --plugin=../node_modules/.bin/protoc-gen-ts_proto --ts_proto_out=./ ./path-to-your.proto
 ```
-`protobufjs` is required to make use of compiled protobufs, and is included in this project.
+
+`protobufjs` is required to make use of compiled protobufs, and is included in this project's `package.json`.
 
 ## Swagger
+
 Swagger is currently available at:
+
 ```
 http://localhost:5000/api/v1/docs
 ```
 
 ## Endpoints (Work-in-Progress)
 
-##### Transit system data:
-- `/api/v1/agency/1/id/MTA NYCT`
-  - Get agency by `feedIndex` = `1` and `agencyId` = `MTA NYCT`
-  - Both of these parameters are required to uniquely identify the correct agency
+### Transit system data:
+
+- `/api/v1/agency/feeds/1`
+  - Get agencies by `feedIndex` = `1`
 - `/api/v1/location/1`
   - Get center coordinates by `feedIndex` = `1`
 - `/api/v1/routes/1`
   - Get all route data by `feedIndex` = `1`
-- `/api/v1/routes/1/id/7X`
-  - Get route by ID where `feedIndex` = `1` and `routeId` = `7X`
-- `/api/v1/routes/1/trips/7X`
-  - Get trips for route identified by `feedIndex` = `1` and `routeId` = `7X`
+- `/api/v1/routes/1/trips/7`
+  - Get trips for route identified by `feedIndex` = `1` and `routeId` = `7`
+- `/api/v1/routes/1/id`
+  - Get list of all route IDs for `feedIndex` = `1`
 
-##### Geographic data:
+### Geographic data:
+
+Note that both stops and shapes can be returned in JSON or GeoJSON. This is to provide data to clients using something like Deck.GL, where a layer (such as `GeoJsonLayer`) might expect a [GeoJSON](https://geojson.org/) object, versus something like `PathLayer` which expects an array of coordinates.
+
 - `/api/v1/geo/1/shapes`
   - Get all route line shapes by `feedIndex` = `1`
 - `/api/v1/geo/1/shapes?geojson=true`
@@ -130,14 +156,47 @@ http://localhost:5000/api/v1/docs
 - `/api/v1/geo/1/stops/S09N`
   - Get raw station data identified by `feedIndex` = `1` and `stationId` = `S09N`
 
-##### GTFS Realtime data:
-- `/api/v1/gtfs/1`
-  - Get entire GTFS-realtime FeedMessage identified by `feedIndex` `1`
-  - __NOTE__: This is an impractical endpoint, and is only here for testing
-- `/api/v1/gtfs/1/location?lat=xxx&lon=xxx`
-  - __TODO__: Find nearest stations to lat/lon
-- `/api/v1/gtfs/1/route/7X`
-  - __TODO__: Find all stations by route id `7X`
-- `/api/v1/gtfs/1/stations/101N,103N,101S,203N`
-  - __TODO__: Find stations by comma-delimited list of station IDs
+### GTFS Real-Time data:
 
+Note that this API also utilizes WebSockets to deliver the following data, but provides the following endpoints for clients that prefer to use a Rest endpoint. The data structure will be identical:
+
+- `/api/v1/realtime/1/alerts`
+  - Get all real-time alerts for `feedIndex` = `1`
+- `/api/v1/realtime/1/trip-updates/101,102,103,201,301,410`
+  - Get all real-time trip-updates for `feedIndex` = `1`, and `stationIds` = `101,102,103,201,301,410`, which is a comma-delimited list of stops (by parent-station ID) for which to receive trip-updates.
+
+## Socket messages:
+
+Your client can subscribe to the following messages to receive Alerts and Trip-Updates:
+
+- `alerts`
+  - Begin receiving alerts at 1 minute intervals
+- `cancel_alerts`
+  - Stop receiving alerts
+- `trip_updates`
+  - Begin receiving trip-updates at 30 second intervals
+- `cancel_trip_updates`
+  - Stop receiving trip-updates
+
+Once connected to `alerts` or `trip_updates`, you can subscribe to one of the following to receive data:
+
+`received_trip_updates`, whose data adheres to the following interface:
+
+```javascript
+{
+  feedIndex: number;
+  stationId: string;
+  transfers: string[];
+  routeIds: string[];
+  stopTimeUpdates: IStopTimeUpdate[];
+}
+```
+
+`received_alerts`:
+
+```javascript
+{
+  feedIndex: number;
+  alerts: IAlert[];
+}
+```
