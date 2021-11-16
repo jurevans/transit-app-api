@@ -6,7 +6,12 @@ import { IAgency } from '../interfaces/agency.interface';
 describe('AgencyController', () => {
   let controller: AgencyController;
 
-  const feedIndices = ['1'];
+  const mockAgencyService = {
+    findAll: jest.fn().mockImplementation((): Promise<IAgency[]> => {
+      return Promise.resolve([mockAgency]);
+    }),
+  };
+
   const mockAgency: IAgency = {
     feedIndex: 1,
     agencyId: 'MTA NYCT',
@@ -17,19 +22,13 @@ describe('AgencyController', () => {
     agencyUrl: 'http://www.mta.info',
   };
 
-  const MockAgencyService = {
-    findAll: jest.fn(() => {
-      return mockAgency;
-    }),
-  };
-
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AgencyController],
       providers: [AgencyService],
     })
       .overrideProvider(AgencyService)
-      .useValue(MockAgencyService)
+      .useValue(mockAgencyService)
       .compile();
 
     controller = module.get<AgencyController>(AgencyController);
@@ -39,7 +38,21 @@ describe('AgencyController', () => {
     expect(controller).toBeDefined();
   });
 
-  it('should return a Agency', () => {
-    expect(controller.findOne(feedIndices)).toEqual(mockAgency);
+  it('should return a Agency', async () => {
+    const feedIndices = ['1'];
+
+    expect(await controller.findOne(feedIndices)).toEqual([
+      {
+        feedIndex: 1,
+        agencyId: expect.any(String),
+        agencyLang: expect.any(String),
+        agencyName: expect.any(String),
+        agencyPhone: expect.any(String),
+        agencyTimezone: expect.any(String),
+        agencyUrl: expect.any(String),
+      },
+    ]);
+
+    expect(mockAgencyService.findAll).toHaveBeenCalledWith({ feedIndices });
   });
 });
