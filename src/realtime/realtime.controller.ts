@@ -10,7 +10,7 @@ import { AlertsService } from './alerts/alerts.service';
 import { TripUpdatesService } from './trip-updates/trip-updates.service';
 import { CacheTtlSeconds } from 'src/constants';
 
-@Controller('real-time')
+@Controller('realtime')
 export class RealtimeController {
   constructor(
     private readonly alertsService: AlertsService,

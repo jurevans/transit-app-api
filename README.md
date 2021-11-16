@@ -158,7 +158,45 @@ Note that both stops and shapes can be returned in JSON or GeoJSON. This is to p
 
 ### GTFS Real-Time data:
 
-- `/api/v1/real-time/1/alerts`
+Note that this API also utilizes WebSockets to deliver the following data, but provides the following endpoints for clients that prefer to use a Rest endpoint. The data structure will be identical:
+
+- `/api/v1/realtime/1/alerts`
   - Get all real-time alerts for `feedIndex` = `1`
-- `/api/v1/real-time/1/trip-updates/101,102,103,201,301,410`
+- `/api/v1/realtime/1/trip-updates/101,102,103,201,301,410`
   - Get all real-time trip-updates for `feedIndex` = `1`, and `stationIds` = `101,102,103,201,301,410`, which is a comma-delimited list of stops (by parent-station ID) for which to receive trip-updates.
+
+## Socket messages:
+
+Your client can subscribe to the following messages to receive Alerts and Trip-Updates:
+
+- `alerts`
+  - Begin receiving alerts at 1 minute intervals
+- `cancel_alerts`
+  - Stop receiving alerts
+- `trip_updates`
+  - Begin receiving trip-updates at 30 second intervals
+- `cancel_trip_updates`
+  - Stop receiving trip-updates
+
+Once connected to `alerts` or `trip_updates`, you can subscribe to one of the following to receive data:
+
+`received_trip_updates`, whose data adheres to the following interface:
+
+```javascript
+{
+  feedIndex: number;
+  stationId: string;
+  transfers: string[];
+  routeIds: string[];
+  stopTimeUpdates: IStopTimeUpdate[];
+}
+```
+
+`received_alerts`:
+
+```javascript
+{
+  feedIndex: number;
+  alerts: IAlert[];
+}
+```
