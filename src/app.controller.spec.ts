@@ -15,8 +15,13 @@ describe('AppController', () => {
   });
 
   describe('root', () => {
+    const mockResponse = JSON.stringify({
+      name: 'GTFS API',
+      url: 'https://github.com/jurevans/transit-app-api/',
+    });
+
     it('should return "GTFS API"', () => {
-      expect(appController.getIndex()).toBe('GTFS API');
+      expect(appController.getIndex()).toEqual(mockResponse);
     });
   });
 });

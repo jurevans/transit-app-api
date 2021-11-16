@@ -19,6 +19,7 @@ import { HealthController } from './health/health.controller';
 import { AuthMiddleware } from './middleware/auth.middleware';
 import { AuthModule } from './auth/auth.module';
 import { RealtimeModule } from './realtime/realtime.module';
+import authConfig from './config/auth.config';
 import gtfsRealtimeConfig from './config/gtfs.config';
 import redisConfig from './config/redis.config';
 import databaseConfig from './config/database.config';
@@ -29,7 +30,7 @@ import { CacheTtlSeconds } from './constants';
     ConfigModule.forRoot({
       isGlobal: true,
       cache: true,
-      load: [gtfsRealtimeConfig, redisConfig, databaseConfig],
+      load: [authConfig, gtfsRealtimeConfig, redisConfig, databaseConfig],
     }),
     CacheModule.registerAsync({
       useFactory: (configService: ConfigService): CacheModuleOptions => ({

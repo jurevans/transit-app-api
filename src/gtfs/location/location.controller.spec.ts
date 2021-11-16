@@ -1,13 +1,20 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { LocationController } from './location.controller';
+import { LocationService } from './location.service';
 
 describe('LocationController', () => {
   let controller: LocationController;
 
+  const mockLocationService = {};
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [LocationController],
-    }).compile();
+      providers: [LocationService],
+    })
+      .overrideProvider(LocationService)
+      .useValue(mockLocationService)
+      .compile();
 
     controller = module.get<LocationController>(LocationController);
   });

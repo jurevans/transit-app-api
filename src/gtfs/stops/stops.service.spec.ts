@@ -1,25 +1,25 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { FeedService } from './feed.service';
-import { FeedInfo } from 'entities/feedInfo.entity';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { StopsService } from './stops.service';
+import { Stops } from 'entities/stops.entity';
 
-describe('FeedService', () => {
-  let service: FeedService;
+describe('StopsService', () => {
+  let service: StopsService;
 
-  const mockFeedRepository = {};
+  const mockStopsRepository = {};
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        FeedService,
+        StopsService,
         {
-          provide: getRepositoryToken(FeedInfo),
-          useValue: mockFeedRepository,
+          provide: getRepositoryToken(Stops),
+          useValue: mockStopsRepository,
         },
       ],
     }).compile();
 
-    service = module.get<FeedService>(FeedService);
+    service = module.get<StopsService>(StopsService);
   });
 
   it('should be defined', () => {
