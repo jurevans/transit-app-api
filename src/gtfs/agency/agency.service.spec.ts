@@ -7,6 +7,10 @@ import { AgencyService } from './agency.service';
 describe('AgencyService', () => {
   let service: AgencyService;
 
+  type Props = {
+    feedIndices: string[];
+  };
+
   const mockAgencyRepository = {
     find: jest.fn().mockImplementation((): Promise<IAgency[]> => {
       return Promise.resolve([mockAgency]);
@@ -42,11 +46,11 @@ describe('AgencyService', () => {
   });
 
   it('should return an array of Agencies', async () => {
-    const feedIndicesProps = {
+    const feedIndicesProps: Props = {
       feedIndices: ['1'],
     };
 
-    expect(await service.findAll(feedIndicesProps)).toEqual([
+    expect(await service.find(feedIndicesProps)).toEqual([
       {
         feedIndex: 1,
         agencyId: expect.any(String),

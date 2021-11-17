@@ -6,10 +6,20 @@ import { IStaticFeed } from '../interfaces/feed.interface';
 describe('FeedController', () => {
   let controller: FeedController;
 
+  type Props = {
+    feedIndex: number;
+  };
+
   const mockFeedService = {
-    findOne: jest.fn().mockImplementation((): Promise<IStaticFeed> => {
-      return Promise.resolve(mockFeed);
-    }),
+    findOne: jest
+      .fn()
+      .mockImplementation((props: Props): Promise<IStaticFeed> => {
+        const { feedIndex } = props;
+        if (!feedIndex) {
+          return Promise.reject();
+        }
+        return Promise.resolve(mockFeed);
+      }),
     findAll: jest.fn().mockImplementation((): Promise<IStaticFeed[]> => {
       return Promise.resolve([mockFeed]);
     }),
@@ -39,6 +49,7 @@ describe('FeedController', () => {
 
   it('should return a Feed', async () => {
     const feedIndex = 1;
+    const props: Props = { feedIndex };
 
     expect(await controller.findOne(feedIndex)).toEqual({
       feedIndex: 1,
@@ -46,7 +57,7 @@ describe('FeedController', () => {
       feedEndDate: expect.any(String),
     });
 
-    expect(mockFeedService.findOne).toHaveBeenCalledWith({ feedIndex });
+    expect(mockFeedService.findOne).toHaveBeenCalledWith(props);
   });
 
   it('should return all Feeds', async () => {

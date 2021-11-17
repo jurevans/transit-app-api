@@ -1,14 +1,19 @@
-import { getManager } from 'typeorm';
+import { Injectable } from '@nestjs/common';
+import { InjectEntityManager } from '@nestjs/typeorm';
+import { EntityManager } from 'typeorm';
 import { ILocation } from '../interfaces/location.interface';
 
+@Injectable()
 export class LocationService {
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
-  constructor() {}
+  constructor(
+    @InjectEntityManager()
+    private readonly entityManager: EntityManager,
+  ) {}
 
   async findLocation(params: { feedIndex: number }): Promise<ILocation> {
     const { feedIndex } = params;
-    const manager = getManager();
-    const locationResults = await manager.query(`
+
+    const locationResults = await this.entityManager.query(`
       WITH centroid AS (
         SELECT ST_Centroid(geom) center
         FROM (SELECT ST_Multi(ST_Union(the_geom))::geometry(MultiPoint, 4326) AS geom
@@ -20,11 +25,7 @@ export class LocationService {
     `);
 
     if (locationResults.length > 0) {
-      const { longitude, latitude } = locationResults[0];
-      return {
-        longitude,
-        latitude,
-      };
+      return locationResults[0];
     }
   }
 }

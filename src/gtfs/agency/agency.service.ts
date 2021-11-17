@@ -11,7 +11,7 @@ export class AgencyService {
     private agencyRepository: Repository<Agency>,
   ) {}
 
-  findAll(props: { feedIndices: string[] }): Promise<IAgency[]> {
+  find(props: { feedIndices: string[] }): Promise<IAgency[]> {
     const { feedIndices } = props;
     return this.agencyRepository.find({
       select: [

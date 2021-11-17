@@ -6,8 +6,16 @@ import { IAgency } from '../interfaces/agency.interface';
 describe('AgencyController', () => {
   let controller: AgencyController;
 
+  type Props = {
+    feedIndices: string[];
+  };
+
   const mockAgencyService = {
-    findAll: jest.fn().mockImplementation((): Promise<IAgency[]> => {
+    find: jest.fn().mockImplementation((props: Props): Promise<IAgency[]> => {
+      const { feedIndices } = props;
+      if (!feedIndices || feedIndices.length === 0) {
+        return Promise.reject();
+      }
       return Promise.resolve([mockAgency]);
     }),
   };
@@ -40,8 +48,11 @@ describe('AgencyController', () => {
 
   it('should return a Agency', async () => {
     const feedIndices = ['1'];
+    const props: Props = {
+      feedIndices,
+    };
 
-    expect(await controller.findOne(feedIndices)).toEqual([
+    expect(await controller.find(feedIndices)).toEqual([
       {
         feedIndex: 1,
         agencyId: expect.any(String),
@@ -53,6 +64,6 @@ describe('AgencyController', () => {
       },
     ]);
 
-    expect(mockAgencyService.findAll).toHaveBeenCalledWith({ feedIndices });
+    expect(mockAgencyService.find).toHaveBeenCalledWith(props);
   });
 });

@@ -15,9 +15,9 @@ export class AgencyController {
 
   @Get('feeds/:feedIndexList')
   @CacheTTL(CacheTtlSeconds.ONE_DAY)
-  findOne(
+  find(
     @Param('feedIndexList', ParseArrayPipe) feedIndices: string[],
   ): Promise<IAgency[]> {
-    return this.agencyService.findAll({ feedIndices });
+    return this.agencyService.find({ feedIndices });
   }
 }
