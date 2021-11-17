@@ -1,16 +1,13 @@
 import { CACHE_MANAGER, Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-//import { HttpService } from '@nestjs/axios';
 import { Cache } from 'cache-manager';
 import { DateTime } from 'luxon';
 import { StationsService } from '../stations/stations.service';
 import { FeedService } from '../feed/feed.service';
 import { IIndexedStops } from '../interfaces/stations.interface';
 import { IEndpoint } from '../interfaces/trip-updates.interface';
-import { CacheKeyPrefix, CacheTtlSeconds } from 'constants/';
+import { CacheKeyPrefix, CacheTtlSeconds, MAX_MINUTES } from 'constants/';
 import { getConfigByFeedIndex } from 'util/';
-
-const MAX_MINUTES = 60;
 
 @Injectable()
 export class TripUpdatesService {
@@ -18,9 +15,6 @@ export class TripUpdatesService {
     @Inject(CACHE_MANAGER)
     private readonly cacheManager: Cache,
     private readonly stationsService: StationsService,
-    // TODO: Is it worth utilizing HttpService?
-    // NOTE: This would return an Observable and change the implementation
-    //private readonly http: HttpService,
     private readonly feedService: FeedService,
     private readonly configService: ConfigService,
   ) {}

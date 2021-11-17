@@ -3,6 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { getManager, Repository } from 'typeorm';
 import { Stops } from 'entities/stops.entity';
 import { getCurrentDay } from 'util/';
+import { AggregatedFeatureCollection } from './interfaces/geojson.interface';
+import { IStop } from './interfaces/stops.interface';
 
 @Injectable()
 export class StopsService {
@@ -11,7 +13,11 @@ export class StopsService {
     private stopsRepository: Repository<Stops>,
   ) {}
 
-  async findAll(props: { feedIndex: number; day?: string; geojson?: boolean }) {
+  async findAll(props: {
+    feedIndex: number;
+    day?: string;
+    geojson?: boolean;
+  }): Promise<AggregatedFeatureCollection | IStop[]> {
     const { feedIndex, day, geojson } = props;
     const manager = getManager();
     const today = day || getCurrentDay();

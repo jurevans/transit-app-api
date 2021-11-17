@@ -4,7 +4,7 @@ import * as path from 'path';
 
 dotenv.config({ path: path.join(process.cwd(), '.env') });
 
-const { API_KEYS: apiKeyString } = process.env;
-const apiKeys = apiKeyString.split(',');
+const { API_KEYS: apiKeysString } = process.env;
+const apiKeys = apiKeysString.split(',');
 
 export default registerAs('auth', () => ({ apiKeys }));
