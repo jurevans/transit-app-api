@@ -45,14 +45,13 @@ describe('LocationController', () => {
 
   it('should return a Feed', async () => {
     const feedIndex = 1;
+    const props: Props = { feedIndex };
 
     expect(await controller.findLocation(feedIndex)).toEqual({
       longitude: expect.any(Number),
       latitude: expect.any(Number),
     });
 
-    expect(mockLocationService.findLocation).toHaveBeenCalledWith({
-      feedIndex,
-    });
+    expect(mockLocationService.findLocation).toHaveBeenCalledWith(props);
   });
 });

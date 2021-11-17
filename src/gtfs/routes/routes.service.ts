@@ -66,7 +66,11 @@ export class RoutesService {
     return routes;
   }
 
-  async findTrips(props: { feedIndex: number; routeId: string; day: string }) {
+  async findTrips(props: {
+    feedIndex: number;
+    routeId: string;
+    day: string;
+  }): Promise<Trips[]> {
     const { feedIndex, routeId, day } = props;
     const today = day || getCurrentDay();
 
@@ -81,7 +85,7 @@ export class RoutesService {
     return trips;
   }
 
-  async findRouteIds(props: { feedIndex: number }): Promise<any> {
+  async findRouteIds(props: { feedIndex: number }): Promise<string[]> {
     const { feedIndex } = props;
     const routeIdsResults = await this.routesRepository.find({
       select: ['routeId'],
