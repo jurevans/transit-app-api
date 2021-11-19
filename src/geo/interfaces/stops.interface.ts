@@ -4,5 +4,5 @@ export interface IStop {
   routeLongNames: string;
   routeColors: string | null;
   name: string;
-  the_geom: string;
+  theGeom: string;
 }

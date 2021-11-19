@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Routes } from 'src/entities/routes.entity';
-import { Trips } from 'src/entities/trips.entity';
-import { getCurrentDay } from 'src/util';
-import { IRoute } from 'src/gtfs/interfaces/routes.interface';
+import { Routes } from 'entities/routes.entity';
+import { Trips } from 'entities/trips.entity';
+import { getCurrentDay } from 'util/';
+import { IRoute } from 'gtfs/interfaces/routes.interface';
 
 @Injectable()
 export class RoutesService {
@@ -66,7 +66,11 @@ export class RoutesService {
     return routes;
   }
 
-  async findTrips(props: { feedIndex: number; routeId: string; day: string }) {
+  async findTrips(props: {
+    feedIndex: number;
+    routeId: string;
+    day: string;
+  }): Promise<Trips[]> {
     const { feedIndex, routeId, day } = props;
     const today = day || getCurrentDay();
 
@@ -81,7 +85,7 @@ export class RoutesService {
     return trips;
   }
 
-  async findRouteIds(props: { feedIndex: number }): Promise<any> {
+  async findRouteIds(props: { feedIndex: number }): Promise<string[]> {
     const { feedIndex } = props;
     const routeIdsResults = await this.routesRepository.find({
       select: ['routeId'],

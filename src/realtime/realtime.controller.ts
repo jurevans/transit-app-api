@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { AlertsService } from './alerts/alerts.service';
 import { TripUpdatesService } from './trip-updates/trip-updates.service';
-import { CacheTtlSeconds } from 'src/constants';
+import { CacheTtlSeconds } from 'constants/';
 
 @Controller('realtime')
 export class RealtimeController {

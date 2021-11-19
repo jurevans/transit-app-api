@@ -1,12 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { getManager, Repository } from 'typeorm';
-import { ShapeGeoms } from 'src/entities/shapeGeoms.entity';
-import { getCurrentDay } from 'src/util';
-import {
-  FeatureCollection,
-  LineString,
-} from 'src/geo/interfaces/geojson.interface';
+import { ShapeGeoms } from 'entities/shapeGeoms.entity';
+import { getCurrentDay } from 'util/';
+import { FeatureCollection, Geometry } from 'geo/interfaces/geojson.interface';
 import { IShape } from './interfaces/shapes.interface';
 
 @Injectable()
@@ -16,10 +13,7 @@ export class ShapesService {
     private shapeGeomsRepository: Repository<ShapeGeoms>,
   ) {}
 
-  async find(props: {
-    feedIndex: number;
-    shapeId: string;
-  }): Promise<LineString> {
+  async find(props: { feedIndex: number; shapeId: string }): Promise<Geometry> {
     const { feedIndex, shapeId } = props;
     const shapeData = await this.shapeGeomsRepository
       .createQueryBuilder('shapeGeoms')
@@ -73,7 +67,7 @@ export class ShapesService {
       )
       FROM (
         ${queryRoutesWithShapes}
-      ) AS t("shape_len", "routeId", "name", "longName", "color", "description", "url", "id", "geom");
+      ) AS t("length", "routeId", "name", "longName", "color", "description", "url", "id", "geom");
     `;
 
     // For any routes missing Shapes, generate LineString geometry

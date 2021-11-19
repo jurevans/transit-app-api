@@ -1,5 +1,5 @@
 import { CacheTTL, Controller, Get, Param, ParseIntPipe } from '@nestjs/common';
-import { CacheTtlSeconds } from 'src/constants';
+import { CacheTtlSeconds } from 'constants/';
 import { IParentStation } from '../interfaces/stops.interface';
 import { StopsService } from './stops.service';
 

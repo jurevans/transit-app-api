@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
-import { Agency } from 'src/entities/agency.entity';
+import { Agency } from 'entities/agency.entity';
 import { IAgency } from '../interfaces/agency.interface';
 
 @Injectable()
@@ -11,7 +11,7 @@ export class AgencyService {
     private agencyRepository: Repository<Agency>,
   ) {}
 
-  findAll(props: { feedIndices: string[] }): Promise<IAgency[]> {
+  find(props: { feedIndices: string[] }): Promise<IAgency[]> {
     const { feedIndices } = props;
     return this.agencyRepository.find({
       select: [

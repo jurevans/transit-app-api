@@ -6,11 +6,11 @@ import {
   ParseIntPipe,
   Query,
 } from '@nestjs/common';
-import { IRoute } from 'src/gtfs/interfaces/routes.interface';
-import { Routes } from 'src/entities/routes.entity';
-import { Trips } from 'src/entities/trips.entity';
+import { IRoute } from 'gtfs/interfaces/routes.interface';
+import { Routes } from 'entities/routes.entity';
+import { Trips } from 'entities/trips.entity';
 import { RoutesService } from './routes.service';
-import { CacheTtlSeconds } from 'src/constants';
+import { CacheTtlSeconds } from 'constants/';
 
 @Controller('routes')
 export class RoutesController {

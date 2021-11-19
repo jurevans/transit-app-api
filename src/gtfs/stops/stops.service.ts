@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { getManager, Repository } from 'typeorm';
-import { Stops } from 'src/entities/stops.entity';
+import { Stops } from 'entities/stops.entity';
 import { IParentStation } from '../interfaces/stops.interface';
 
 @Injectable()
@@ -22,7 +22,7 @@ export class StopsService {
         t.trip_headsign AS "headsign",
         t.trip_id AS "tripId",
         t.route_id AS "routeId",
-        t.direction_id,
+        t.direction_id AS "directionId",
         EXTRACT(epoch FROM st.arrival_time) AS "time"
       FROM stops s
       INNER JOIN

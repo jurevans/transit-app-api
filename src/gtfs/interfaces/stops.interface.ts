@@ -4,7 +4,7 @@ export interface IStop {
   headsign: string;
   tripId: string;
   routeId: string;
-  direction_id: number;
+  directionId: number;
   time: number;
 }
 
