@@ -1,48 +1,85 @@
-import { CACHE_MANAGER, Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Cache } from 'cache-manager';
-import { FeedService } from '../feed/feed.service';
-import { CacheKeyPrefix, CacheTtlSeconds } from 'constants/';
-import { formatCacheKey, getConfigByFeedIndex } from 'util/';
-import { IAlerts } from '../interfaces/alerts.interface';
-import { IRealtimeFeed } from '../interfaces/feed.interface';
+import { FeedService } from 'realtime/feed/feed.service';
+import {
+  FeedMessage,
+  FeedEntity,
+  Alert,
+  EntitySelector,
+} from 'realtime/proto/gtfs-realtime';
+import {
+  IAlert,
+  IAlerts,
+  IIndexedAlerts,
+} from 'realtime/interfaces/alerts.interface';
+import { getAlertTranslationText, getConfigByFeedIndex } from 'util/';
 
 @Injectable()
 export class AlertsService {
   constructor(
-    @Inject(CACHE_MANAGER)
-    private readonly cacheManager: Cache,
     private readonly feedService: FeedService,
     private readonly configService: ConfigService,
   ) {}
 
-  public async getAlerts(feedIndex: number): Promise<IAlerts> {
+  public async getAlerts(feedIndex): Promise<Alert[]> {
     const config = getConfigByFeedIndex(
       this.configService,
       'gtfs-realtime',
       feedIndex,
     );
+
     const { serviceAlertUrl } = config;
-    const key = formatCacheKey(CacheKeyPrefix.ALERTS, feedIndex);
-    const alertsInCache: IAlerts = await this.cacheManager.get(key);
 
-    if (alertsInCache) {
-      return alertsInCache;
-    }
-
-    const feed: IRealtimeFeed = await this.feedService.getFeed({
+    const feed: FeedMessage = await this.feedService.getFeed({
       feedIndex,
       endpoint: serviceAlertUrl,
     });
 
-    const entities = feed.entity;
-    const alerts = entities.map((entity: any) => {
-      const { alert } = entity;
-      const { cause, effect } = alert;
+    const { entity: entities } = feed;
+    const alerts: Alert[] = entities.map((entity: FeedEntity) => entity.alert);
+    return alerts;
+  }
+
+  public async getIndexedAlerts(feedIndex: number): Promise<IIndexedAlerts> {
+    const alerts: Alert[] = await this.getAlerts(feedIndex);
+
+    const indexedAlerts = alerts.reduce((formattedAlerts, alert: Alert) => {
+      const {
+        activePeriod,
+        informedEntity,
+        cause,
+        effect,
+        headerText,
+        descriptionText,
+      } = alert;
+
+      informedEntity.forEach((entity: EntitySelector) => {
+        const { routeId } = entity;
+        if (!formattedAlerts.hasOwnProperty(routeId)) {
+          formattedAlerts[routeId] = [];
+        }
+        formattedAlerts[routeId].push({
+          activePeriod,
+          cause,
+          effect,
+          headerText: getAlertTranslationText(headerText, 'en'),
+          descriptionText: getAlertTranslationText(descriptionText, 'en'),
+        });
+      });
+      return formattedAlerts;
+    }, {});
+
+    return indexedAlerts;
+  }
+
+  /* TODO: This method will be removed */
+  public async getFormattedAlerts(feedIndex: number): Promise<IAlerts> {
+    const alerts: Alert[] = await this.getAlerts(feedIndex);
+
+    const formattedAlerts: IAlert[] = alerts.map((alert: Alert) => {
+      const { cause, effect, headerText, descriptionText } = alert;
       const { routeId, trip } = alert.informedEntity[0];
       const activePeriod = alert.activePeriod[0];
-      const headerText = alert.headerText.translation[0].text;
-      const descriptionText = alert.descriptionText.translation[0].text;
 
       return {
         routeId,
@@ -50,12 +87,12 @@ export class AlertsService {
         cause,
         effect,
         activePeriod,
-        headerText,
-        descriptionText,
+        headerText: getAlertTranslationText(headerText, 'en'),
+        descriptionText: getAlertTranslationText(descriptionText, 'en'),
       };
     });
 
-    const alertsByRouteId = alerts.reduce((acc: any, alert: any) => {
+    const alertsByRouteId = formattedAlerts.reduce((acc: any, alert: any) => {
       const { routeId, trip } = alert;
       const useRouteId = routeId !== '' ? routeId : trip ? trip.routeId : '';
 
@@ -70,10 +107,6 @@ export class AlertsService {
       }
       return acc;
     }, {});
-
-    await this.cacheManager.set(key, alertsByRouteId, {
-      ttl: CacheTtlSeconds.ONE_MINUTE,
-    });
 
     return alertsByRouteId;
   }

@@ -1,4 +1,5 @@
 import { ConfigService } from '@nestjs/config';
+import { TranslatedString } from 'realtime/proto/gtfs-realtime';
 /**
  * Get current day of the week (e.g., 'monday', 'tuesday', etc.)
  * @returns {string}
@@ -87,4 +88,25 @@ export const getConfigByFeedIndex: any = (
   return configService
     .get(configKey)
     .find((config: any) => config.feedIndex === feedIndex);
+};
+
+/**
+ * Return English text from Alert
+ * @param translated
+ * @param language
+ * @returns {string}
+ */
+export const getAlertTranslationText = (
+  translated: TranslatedString,
+  language: string,
+) => {
+  const { translation } = translated;
+  const textTranslation = translation.find(
+    (translation: any) => translation.language === language,
+  );
+  if (textTranslation) {
+    const { text } = textTranslation;
+    return text;
+  }
+  return '';
 };
