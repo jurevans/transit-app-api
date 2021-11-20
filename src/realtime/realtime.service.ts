@@ -89,9 +89,8 @@ export class RealtimeService {
       feedIndex,
     );
     const { feedUrls } = config;
-    // Which of these URLs should I use?
     const urls = getUrlsByRouteIds(feedUrls, routeIds);
-    console.log({ urls });
+
     return Promise.all(
       urls.map(
         async (endpoint: string) => <FeedMessage>await this._getFeedMessage({

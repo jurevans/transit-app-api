@@ -14,7 +14,7 @@ import { AlertsService } from 'realtime/alerts/alerts.service';
 import { TripUpdatesService } from 'realtime/trip-updates/trip-updates.service';
 import { RealtimeService } from 'realtime/realtime.service';
 import { Alert } from 'realtime/proto/gtfs-realtime';
-import { AlertEntity } from 'realtime/entities/AlertEntity';
+import { AlertEntity } from 'realtime/entities/alert.entity';
 import { CacheTtlSeconds } from 'constants/';
 
 @Controller('realtime')
