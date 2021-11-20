@@ -55,7 +55,6 @@ export class TripUpdatesService {
     // Which of these URLs should I use?
     const urls = this._getRouteUrls(feedUrls, routeIds);
 
-    // Add the following fetches to a queue instead?
     return Promise.all(
       urls.map(async (endpoint: string) => {
         // Check Redis for cached response:

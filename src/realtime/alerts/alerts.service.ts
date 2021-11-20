@@ -1,27 +1,27 @@
-import { Injectable } from '@nestjs/common';
+import { CACHE_MANAGER, Inject, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Cache } from 'cache-manager';
+import { CacheKeyPrefix, CacheTtlSeconds } from 'constants/';
 import { FeedService } from 'realtime/feed/feed.service';
+import { IAlert, IAlerts } from 'realtime/interfaces/alerts.interface';
+import { FeedMessage, FeedEntity, Alert } from 'realtime/proto/gtfs-realtime';
 import {
-  FeedMessage,
-  FeedEntity,
-  Alert,
-  EntitySelector,
-} from 'realtime/proto/gtfs-realtime';
-import {
-  IAlert,
-  IAlerts,
-  IIndexedAlerts,
-} from 'realtime/interfaces/alerts.interface';
-import { getAlertTranslationText, getConfigByFeedIndex } from 'util/';
+  formatCacheKey,
+  getAlertTranslationText,
+  getConfigByFeedIndex,
+} from 'util/';
 
 @Injectable()
 export class AlertsService {
   constructor(
+    @Inject(CACHE_MANAGER)
+    private readonly cacheManager: Cache,
     private readonly feedService: FeedService,
     private readonly configService: ConfigService,
   ) {}
 
-  public async getAlerts(feedIndex): Promise<Alert[]> {
+  /* TODO: This method will be removed */
+  public async getFormattedAlerts(feedIndex: number): Promise<IAlerts> {
     const config = getConfigByFeedIndex(
       this.configService,
       'gtfs-realtime',
@@ -29,6 +29,12 @@ export class AlertsService {
     );
 
     const { serviceAlertUrl } = config;
+    const key = formatCacheKey(CacheKeyPrefix.ALERTS, feedIndex);
+    const alertsInCache: IAlerts = await this.cacheManager.get(key);
+
+    if (alertsInCache) {
+      return alertsInCache;
+    }
 
     const feed: FeedMessage = await this.feedService.getFeed({
       feedIndex,
@@ -37,49 +43,13 @@ export class AlertsService {
 
     const { entity: entities } = feed;
     const alerts: Alert[] = entities.map((entity: FeedEntity) => entity.alert);
-    return alerts;
-  }
-
-  public async getIndexedAlerts(feedIndex: number): Promise<IIndexedAlerts> {
-    const alerts: Alert[] = await this.getAlerts(feedIndex);
-
-    const indexedAlerts = alerts.reduce((formattedAlerts, alert: Alert) => {
-      const {
-        activePeriod,
-        informedEntity,
-        cause,
-        effect,
-        headerText,
-        descriptionText,
-      } = alert;
-
-      informedEntity.forEach((entity: EntitySelector) => {
-        const { routeId } = entity;
-        if (!formattedAlerts.hasOwnProperty(routeId)) {
-          formattedAlerts[routeId] = [];
-        }
-        formattedAlerts[routeId].push({
-          activePeriod,
-          cause,
-          effect,
-          headerText: getAlertTranslationText(headerText, 'en'),
-          descriptionText: getAlertTranslationText(descriptionText, 'en'),
-        });
-      });
-      return formattedAlerts;
-    }, {});
-
-    return indexedAlerts;
-  }
-
-  /* TODO: This method will be removed */
-  public async getFormattedAlerts(feedIndex: number): Promise<IAlerts> {
-    const alerts: Alert[] = await this.getAlerts(feedIndex);
 
     const formattedAlerts: IAlert[] = alerts.map((alert: Alert) => {
-      const { cause, effect, headerText, descriptionText } = alert;
+      const { cause, effect } = alert;
       const { routeId, trip } = alert.informedEntity[0];
       const activePeriod = alert.activePeriod[0];
+      const headerText = alert.headerText.translation[0].text;
+      const descriptionText = alert.descriptionText.translation[0].text;
 
       return {
         routeId,
@@ -87,8 +57,8 @@ export class AlertsService {
         cause,
         effect,
         activePeriod,
-        headerText: getAlertTranslationText(headerText, 'en'),
-        descriptionText: getAlertTranslationText(descriptionText, 'en'),
+        headerText,
+        descriptionText,
       };
     });
 
@@ -108,6 +78,59 @@ export class AlertsService {
       return acc;
     }, {});
 
-    return alertsByRouteId;
+    await this.cacheManager.set(key, alertsByRouteId, {
+      ttl: CacheTtlSeconds.ONE_MINUTE,
+    });
+
+    return this.cacheManager.get(key);
+  }
+
+  public async getAlerts(feedIndex: number): Promise<Alert[]> {
+    const config = getConfigByFeedIndex(
+      this.configService,
+      'gtfs-realtime',
+      feedIndex,
+    );
+
+    const { serviceAlertUrl } = config;
+
+    const feed: FeedMessage = await this.feedService.getFeed({
+      feedIndex,
+      endpoint: serviceAlertUrl,
+    });
+
+    const { entity: entities } = feed;
+    return <Alert[]>entities.map((entity: FeedEntity) => entity.alert);
+  }
+
+  /* TODO: This logic will likely be removed to, and moved into the client */
+  public async getIndexedAlerts(feedIndex: number) {
+    const alerts = await this.getAlerts(feedIndex);
+    const indexedAlerts = alerts.reduce((indexedAlerts, alert: Alert) => {
+      const {
+        activePeriod,
+        informedEntity,
+        cause,
+        effect,
+        headerText,
+        descriptionText,
+      } = alert;
+      informedEntity.forEach((entity: any) => {
+        const { routeId } = entity;
+        if (!indexedAlerts.hasOwnProperty(routeId)) {
+          indexedAlerts[routeId] = [];
+        }
+        indexedAlerts[routeId].push({
+          activePeriod,
+          cause,
+          effect,
+          headerText: getAlertTranslationText(headerText, 'en'),
+          descriptionText: getAlertTranslationText(descriptionText, 'en'),
+        });
+      });
+      return indexedAlerts;
+    }, {});
+
+    return indexedAlerts;
   }
 }

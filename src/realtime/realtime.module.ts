@@ -5,6 +5,7 @@ import { HttpModule } from '@nestjs/axios';
 import { Stops } from 'entities/stops.entity';
 import { Transfers } from 'entities/transfers.entity';
 import { RealtimeGateway } from './realtime.gateway';
+import { RealtimeService } from 'realtime/realtime.service';
 import { TripUpdatesService } from './trip-updates/trip-updates.service';
 import { StationsService } from './stations/stations.service';
 import * as redisStore from 'cache-manager-redis-store';
@@ -31,6 +32,7 @@ import { RealtimeController } from './realtime.controller';
   exports: [TypeOrmModule],
   providers: [
     RealtimeGateway,
+    RealtimeService,
     TripUpdatesService,
     StationsService,
     FeedService,

@@ -74,7 +74,6 @@ export class RealtimeGateway
 
     this.addInterval('gtfs-alerts', Intervals.GTFS_ALERTS, async () => {
       this.logger.log('Sending new alerts!');
-      /* TODO: The following will be updated to use getIndexedAlerts */
       const alerts = await this.alertsService.getFormattedAlerts(feedIndex);
       socket.emit('received_alerts', {
         feedIndex,
