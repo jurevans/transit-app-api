@@ -13,7 +13,7 @@ import {
   IStopTimeUpdate,
   ITrip,
 } from 'realtime/interfaces/trip-updates.interface';
-import { IEndpoint } from 'realtime/interfaces/trip-updates.interface';
+import { IEndpoint } from 'realtime/interfaces/endpoint.interface';
 import { CacheKeyPrefix, CacheTtlSeconds, MAX_MINUTES } from 'constants/';
 import { getConfigByFeedIndex } from 'util/';
 import { FeedMessage } from 'realtime/proto/gtfs-realtime';

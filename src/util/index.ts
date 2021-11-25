@@ -1,5 +1,5 @@
 import { ConfigService } from '@nestjs/config';
-import { IEndpoint } from 'realtime/interfaces/trip-updates.interface';
+import { IEndpoint } from 'realtime/interfaces/endpoint.interface';
 import {
   FeedEntity,
   FeedMessage,
@@ -134,7 +134,7 @@ export const getFeedEntitiesByType = (
 };
 
 /**
- * Get array of URLs based on routeIds. If no routeIds provided, return all
+ * Get array of URLs based on routeIds. If no routeIds provided, return all route URLs
  * @param feedUrls
  * @param routeIds
  * @returns {string[]}
@@ -142,17 +142,30 @@ export const getFeedEntitiesByType = (
 export const getUrlsByRouteIds = (
   feedUrls: IEndpoint[],
   routeIds: string[],
-) => {
+): string[] => {
   const endpoints = routeIds
     ? feedUrls.filter((endpoint: IEndpoint) => {
         if (routeIds.length > 0 && endpoint.hasOwnProperty('routes')) {
-          return endpoint.routes.some(
-            (route: string) => routeIds.indexOf(route) > -1,
-          );
+          if (endpoint.routes.some) {
+            return endpoint.routes.some(
+              (route: string) => routeIds.indexOf(route) > -1,
+            );
+          }
+          return false;
         }
-        return true;
+        return !!endpoint.routes;
       })
     : feedUrls;
 
   return endpoints.map((endpoint: IEndpoint) => endpoint.url);
 };
+
+/**
+ * Get array of URLs for service alerts
+ * @param feedUrls
+ * @returns {string[]}
+ */
+export const getAlertUrls = (feedUrls: IEndpoint[]): string[] =>
+  feedUrls
+    .filter((endpoint: IEndpoint) => endpoint.alert === true)
+    .map((endpoint: IEndpoint) => endpoint.url);

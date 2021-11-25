@@ -13,7 +13,7 @@ import {
 import { AlertsService } from 'realtime/alerts/alerts.service';
 import { TripUpdatesService } from 'realtime/trip-updates/trip-updates.service';
 import { RealtimeService } from 'realtime/realtime.service';
-import { Alert } from 'realtime/proto/gtfs-realtime';
+import { Alert, FeedEntity } from 'realtime/proto/gtfs-realtime';
 import { AlertEntity } from 'realtime/entities/alert.entity';
 import { CacheTtlSeconds } from 'constants/';
 
@@ -53,7 +53,6 @@ export class RealtimeController {
     @Param('feedIndex', ParseIntPipe) feedIndex: number,
   ): Promise<AlertEntity[]> {
     const alerts = await this.realtimeService.getAlerts(feedIndex);
-
     return alerts.map((alert: Alert) => new AlertEntity(alert));
   }
 
@@ -63,7 +62,7 @@ export class RealtimeController {
     @Param('feedIndex', ParseIntPipe) feedIndex: number,
     @Query('routeIds', new DefaultValuePipe([]), ParseArrayPipe)
     routeIds: string[],
-  ): Promise<any> {
+  ): Promise<FeedEntity[]> {
     return this.realtimeService.getTripUpdates({
       feedIndex,
       routeIds,

@@ -90,7 +90,6 @@ export class RealtimeService {
     );
     const { feedUrls } = config;
     const urls = getUrlsByRouteIds(feedUrls, routeIds);
-
     return Promise.all(
       urls.map(
         async (endpoint: string) => <FeedMessage>await this._getFeedMessage({
