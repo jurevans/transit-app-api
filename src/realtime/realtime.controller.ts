@@ -45,10 +45,10 @@ export class RealtimeController {
     });
   }
 
-  /* New endpoints in development: */
+  // New endpoint in development
   @UseInterceptors(ClassSerializerInterceptor)
   @Get(':feedIndex/alerts-test')
-  @CacheTTL(1) // TODO: Change Me
+  @CacheTTL(CacheTtlSeconds.THIRTY_SECONDS)
   async findAlertsTest(
     @Param('feedIndex', ParseIntPipe) feedIndex: number,
   ): Promise<AlertEntity[]> {
@@ -56,8 +56,9 @@ export class RealtimeController {
     return alerts.map((alert: Alert) => new AlertEntity(alert));
   }
 
+  // New endpoint in development
   @Get(':feedIndex/trip-updates-test')
-  @CacheTTL(1) // TODO: Change Me
+  @CacheTTL(CacheTtlSeconds.THIRTY_SECONDS)
   findTripUpdatesTest(
     @Param('feedIndex', ParseIntPipe) feedIndex: number,
     @Query('routeIds', new DefaultValuePipe([]), ParseArrayPipe)
