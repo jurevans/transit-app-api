@@ -1,4 +1,11 @@
 import { ConfigService } from '@nestjs/config';
+import { IEndpoint } from 'realtime/interfaces/endpoint.interface';
+import {
+  FeedEntity,
+  FeedMessage,
+  TranslatedString,
+} from 'realtime/proto/gtfs-realtime';
+
 /**
  * Get current day of the week (e.g., 'monday', 'tuesday', etc.)
  * @returns {string}
@@ -18,6 +25,7 @@ export const getCurrentDay = (): string => {
 };
 
 export type Coordinate = [number, number];
+
 /**
  * Get distance between two points
  * See: https://www.geodatasource.com/developers/javascript
@@ -88,3 +96,76 @@ export const getConfigByFeedIndex: any = (
     .get(configKey)
     .find((config: any) => config.feedIndex === feedIndex);
 };
+
+/**
+ * Return translated text from Alerts
+ * @param translated
+ * @param language
+ * @returns {string}
+ */
+export const getAlertTranslationText = (
+  translated: TranslatedString,
+  language: string,
+): string => {
+  const { translation } = translated;
+  const textTranslation = translation.find(
+    (translation: any) => translation.language === language,
+  );
+  if (textTranslation) {
+    const { text } = textTranslation;
+    return text;
+  }
+  return '';
+};
+
+/**
+ * Return FeedEntities specified by type
+ * @param feedMessage
+ * @param type
+ * @returns {FeedEntity[]}
+ */
+export const getFeedEntitiesByType = (
+  feedMessage: FeedMessage,
+  type: string,
+): FeedEntity[] => {
+  return feedMessage.entity.filter((entity: FeedEntity) =>
+    entity.hasOwnProperty(type),
+  );
+};
+
+/**
+ * Get array of URLs based on routeIds. If no routeIds provided, return all route URLs
+ * @param feedUrls
+ * @param routeIds
+ * @returns {string[]}
+ */
+export const getUrlsByRouteIds = (
+  feedUrls: IEndpoint[],
+  routeIds: string[],
+): string[] => {
+  const endpoints = routeIds
+    ? feedUrls.filter((endpoint: IEndpoint) => {
+        if (routeIds.length > 0 && endpoint.hasOwnProperty('routes')) {
+          if (endpoint.routes.some) {
+            return endpoint.routes.some(
+              (route: string) => routeIds.indexOf(route) > -1,
+            );
+          }
+          return false;
+        }
+        return !!endpoint.routes;
+      })
+    : feedUrls;
+
+  return endpoints.map((endpoint: IEndpoint) => endpoint.url);
+};
+
+/**
+ * Get array of URLs for service alerts
+ * @param feedUrls
+ * @returns {string[]}
+ */
+export const getAlertUrls = (feedUrls: IEndpoint[]): string[] =>
+  feedUrls
+    .filter((endpoint: IEndpoint) => endpoint.alert === true)
+    .map((endpoint: IEndpoint) => endpoint.url);

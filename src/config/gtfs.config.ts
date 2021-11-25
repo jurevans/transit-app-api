@@ -37,6 +37,10 @@ export default registerAs('gtfs-realtime', () => [
         routes: ['SI'],
         url: 'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-si',
       },
+      {
+        alert: true,
+        url: 'https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/camsys%2Fsubway-alerts',
+      },
     ],
     proto: 'nyct-subway',
     // Specify any differences between static and RT routeIds here:
